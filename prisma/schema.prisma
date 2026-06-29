@@ -52,6 +52,7 @@ model User {
   accountStatus      AccountStatus      @default(ACTIVE)
   registrationStatus RegistrationStatus @default(COMPLETED)
   isEmailVerified    Boolean            @default(false)
+  profilePhotoUrl    String?
   lastLoginAt        DateTime?
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
