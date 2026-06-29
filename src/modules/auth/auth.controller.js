@@ -56,9 +56,23 @@ const login = async (req, res, next) => {
   }
 };
 
+const logout = async (req, res, next) => {
+  try {
+    const result = await authService.logoutUser();
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerPatient,
   registerDoctor,
   registerIntern,
   login,
+  logout,
 };

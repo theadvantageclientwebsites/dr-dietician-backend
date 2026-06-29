@@ -208,9 +208,17 @@ const loginUser = async ({ email, password }) => {
   };
 };
 
+const logoutUser = async () => {
+  return {
+    message: "Logout successful",
+  };
+};
+
+
 module.exports = {
   registerPatient,
   registerDoctor,
   registerIntern,
   loginUser,
+  logoutUser,
 };
