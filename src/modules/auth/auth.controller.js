@@ -1,4 +1,5 @@
 const authService = require("./auth.service");
+const prisma = require("../../lib/prisma");
 
 const registerPatient = async (req, res, next) => {
   try {
@@ -56,6 +57,7 @@ const login = async (req, res, next) => {
   }
 };
 
+
 const logout = async (req, res, next) => {
   try {
     const result = await authService.logoutUser();
@@ -69,10 +71,44 @@ const logout = async (req, res, next) => {
   }
 };
 
+const getMe = async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.user.userId,
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        role: true,
+        accountStatus: true,
+        profilePhotoUrl: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerPatient,
   registerDoctor,
   registerIntern,
   login,
   logout,
+  getMe,
 };
