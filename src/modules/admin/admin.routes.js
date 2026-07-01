@@ -34,10 +34,38 @@ router.get(
 );
 
 router.get(
+  "/patients/:id",
+  authMiddleware,
+  adminMiddleware,
+  adminController.getPatientById
+);
+
+router.put(
+  "/patients/:id",
+  authMiddleware,
+  adminMiddleware,
+  adminController.updatePatient
+);
+
+router.delete(
+  "/patients/:id",
+  authMiddleware,
+  adminMiddleware,
+  adminController.deletePatient
+);
+
+router.get(
   "/interns",
   authMiddleware,
   adminMiddleware,
   adminController.getInterns
+);
+
+router.get(
+  "/appointments",
+  authMiddleware,
+  adminMiddleware,
+  adminController.getAppointments
 );
 
 module.exports = router;
