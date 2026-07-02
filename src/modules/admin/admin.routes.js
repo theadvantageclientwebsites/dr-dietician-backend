@@ -3,6 +3,10 @@ const adminController = require("./admin.controller");
 const authMiddleware = require("../../middlewares/auth.middleware");
 const adminMiddleware = require("../../middlewares/admin.middleware");
 
+// Import sub-module routes
+const patientsRoutes = require("./patients/patients.routes");
+const internsRoutes = require("./interns/interns.routes");
+
 const router = express.Router();
 
 router.get(
@@ -26,40 +30,11 @@ router.patch(
   adminController.approveDoctor
 );
 
-router.get(
-  "/patients",
-  authMiddleware,
-  adminMiddleware,
-  adminController.getPatients
-);
+// Use patient routes - all routes under /api/admin/patients
+router.use("/patients", patientsRoutes);
 
-router.get(
-  "/patients/:id",
-  authMiddleware,
-  adminMiddleware,
-  adminController.getPatientById
-);
-
-router.put(
-  "/patients/:id",
-  authMiddleware,
-  adminMiddleware,
-  adminController.updatePatient
-);
-
-router.delete(
-  "/patients/:id",
-  authMiddleware,
-  adminMiddleware,
-  adminController.deletePatient
-);
-
-router.get(
-  "/interns",
-  authMiddleware,
-  adminMiddleware,
-  adminController.getInterns
-);
+// Use intern routes - all routes under /api/admin/interns
+router.use("/interns", internsRoutes);
 
 router.get(
   "/appointments",

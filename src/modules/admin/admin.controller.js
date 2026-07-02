@@ -42,48 +42,6 @@ const approveDoctor = async (req, res, next) => {
   }
 };
 
-const getPatients = async (req, res, next) => {
-  try {
-    const data = await adminService.getPatients(req.query);
-
-    res.status(200).json({
-      success: true,
-      message: "Patients fetched successfully",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getPatientById = async (req, res, next) => {
-  try {
-    const data = await adminService.getPatientById(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      message: "Patient fetched successfully",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const getInterns = async (req, res, next) => {
-  try {
-    const data = await adminService.getInterns();
-
-    res.status(200).json({
-      success: true,
-      message: "Interns fetched successfully",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 const getAppointments = async (req, res, next) => {
   try {
     const data = await adminService.getAppointments();
@@ -98,42 +56,9 @@ const getAppointments = async (req, res, next) => {
   }
 };
 
-const updatePatient = async (req, res, next) => {
-  try {
-    const data = await adminService.updatePatient(req.params.id, req.body);
-
-    res.status(200).json({
-      success: true,
-      message: "Patient updated successfully",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const deletePatient = async (req, res, next) => {
-  try {
-    const data = await adminService.deletePatient(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      message: "Patient deleted successfully",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 module.exports = {
   getDashboardSummary,
   getDoctors,
   approveDoctor,
-  getPatients,
-  getPatientById,
-  updatePatient,
-  deletePatient,
-  getInterns,
   getAppointments,
 };
