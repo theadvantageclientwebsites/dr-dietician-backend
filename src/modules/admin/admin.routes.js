@@ -8,6 +8,7 @@ const patientsRoutes = require("./patients/patients.routes");
 const internsRoutes = require("./interns/interns.routes");
 const doctorsRoutes = require("./doctors/doctors.routes");
 const appointmentsRoutes = require("./appointments/appointments.routes");
+const packagesRoutes = require("./packages/packages.routes");
 
 const router = express.Router();
 
@@ -29,5 +30,8 @@ router.use("/doctors", doctorsRoutes);
 
 // Use appointment routes - all routes under /api/admin/appointments
 router.use("/appointments", appointmentsRoutes);
+
+// Use package routes - all routes under /api/admin/packages
+router.use("/packages", packagesRoutes);
 
 module.exports = router;
