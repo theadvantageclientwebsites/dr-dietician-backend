@@ -34,39 +34,6 @@ const getDashboardSummary = async () => {
   };
 };
 
-const getAppointments = async () => {
-  const appointments = await prisma.appointment.findMany({
-    select: {
-      id: true,
-      title: true,
-      notes: true,
-      date: true,
-      status: true,
-      createdAt: true,
-      patient: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-        },
-      },
-      doctor: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-        },
-      },
-    },
-    orderBy: {
-      date: "asc",
-    },
-  });
-
-  return appointments;
-};
-
 module.exports = {
   getDashboardSummary,
-  getAppointments,
 };

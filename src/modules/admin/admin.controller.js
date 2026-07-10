@@ -14,21 +14,6 @@ const getDashboardSummary = async (req, res, next) => {
   }
 };
 
-const getAppointments = async (req, res, next) => {
-  try {
-    const data = await adminService.getAppointments();
-
-    res.status(200).json({
-      success: true,
-      message: "Appointments fetched successfully",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 module.exports = {
   getDashboardSummary,
-  getAppointments,
 };

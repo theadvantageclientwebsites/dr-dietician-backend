@@ -7,6 +7,7 @@ const adminMiddleware = require("../../middlewares/admin.middleware");
 const patientsRoutes = require("./patients/patients.routes");
 const internsRoutes = require("./interns/interns.routes");
 const doctorsRoutes = require("./doctors/doctors.routes");
+const appointmentsRoutes = require("./appointments/appointments.routes");
 
 const router = express.Router();
 
@@ -26,11 +27,7 @@ router.use("/interns", internsRoutes);
 // Use doctor routes - all routes under /api/admin/doctors
 router.use("/doctors", doctorsRoutes);
 
-router.get(
-  "/appointments",
-  authMiddleware,
-  adminMiddleware,
-  adminController.getAppointments
-);
+// Use appointment routes - all routes under /api/admin/appointments
+router.use("/appointments", appointmentsRoutes);
 
 module.exports = router;

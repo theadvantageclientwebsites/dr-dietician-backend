@@ -43,6 +43,18 @@ enum BloodGroup {
   O_NEG
 }
 
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum AppointmentType {
+  ONLINE
+  IN_PERSON
+}
+
 model User {
   id                 String             @id @default(uuid())
   fullName           String
@@ -57,9 +69,26 @@ model User {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  patientProfile     PatientProfile?
-  doctorProfile      DoctorProfile?
-  internProfile      InternProfile?
+  patientProfile        PatientProfile?
+  doctorProfile         DoctorProfile?
+  internProfile         InternProfile?
+  appointmentsAsPatient Appointment[]   @relation("PatientAppointments")
+  appointmentsAsDoctor  Appointment[]   @relation("DoctorAppointments")
+}
+
+model Appointment {
+  id        String            @id @default(uuid())
+  patientId String
+  doctorId  String
+  dateTime  DateTime
+  type      AppointmentType   @default(ONLINE)
+  status    AppointmentStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  patient   User @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor    User @relation("DoctorAppointments",  fields: [doctorId],  references: [id], onDelete: Cascade)
 }
 
 model PatientProfile {
