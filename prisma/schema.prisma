@@ -72,8 +72,9 @@ model User {
   patientProfile        PatientProfile?
   doctorProfile         DoctorProfile?
   internProfile         InternProfile?
-  appointmentsAsPatient Appointment[]   @relation("PatientAppointments")
-  appointmentsAsDoctor  Appointment[]   @relation("DoctorAppointments")
+  appointmentsAsPatient Appointment[]      @relation("PatientAppointments")
+  appointmentsAsDoctor  Appointment[]      @relation("DoctorAppointments")
+  courseEnrollments     CourseEnrollment[] @relation("InternEnrollments")
 }
 
 model Appointment {
@@ -178,4 +179,81 @@ model InternProfile {
   updatedAt      DateTime  @updatedAt
 
   user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── LMS Models ───────────────────────────────────────────────────────────────
+
+enum EnrollmentStatus {
+  ENROLLED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+model Course {
+  id             String   @id @default(uuid())
+  title          String
+  description    String?
+  thumbnailUrl   String?
+  category       String?
+  instructor     String?
+  duration       String?
+  minSemester    Int?
+  minYear        Int?
+  hasFinalTest   Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  totalLessons   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  lessons     Lesson[]
+  enrollments CourseEnrollment[]
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  courseId    String
+  title       String
+  content     String?
+  videoUrl    String?
+  fileUrl     String?
+  order       Int
+  durationMin Int?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course          Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonProgress  LessonProgress[]
+}
+
+model CourseEnrollment {
+  id           String           @id @default(uuid())
+  internId     String
+  courseId     String
+  status       EnrollmentStatus @default(ENROLLED)
+  progress     Float            @default(0)
+  enrolledAt   DateTime         @default(now())
+  completedAt  DateTime?
+  updatedAt    DateTime         @updatedAt
+
+  intern          User             @relation("InternEnrollments", fields: [internId], references: [id], onDelete: Cascade)
+  course          Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonProgress  LessonProgress[]
+
+  @@unique([internId, courseId])
+}
+
+model LessonProgress {
+  id           String   @id @default(uuid())
+  enrollmentId String
+  lessonId     String
+  isCompleted  Boolean  @default(false)
+  completedAt  DateTime?
+  createdAt    DateTime @default(now())
+
+  enrollment CourseEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson     Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([enrollmentId, lessonId])
 }

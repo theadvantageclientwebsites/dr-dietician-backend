@@ -10,6 +10,7 @@ const doctorsRoutes = require("./doctors/doctors.routes");
 const appointmentsRoutes = require("./appointments/appointments.routes");
 const packagesRoutes = require("./packages/packages.routes");
 const digitalProductsRoutes = require("./digital-products/digital-products.routes");
+const coursesRoutes = require("./courses/courses.routes");
 
 const router = express.Router();
 
@@ -37,5 +38,8 @@ router.use("/packages", packagesRoutes);
 
 // Use digital products routes - all routes under /api/admin/digital-products
 router.use("/digital-products", digitalProductsRoutes);
+
+// Use courses routes - all routes under /api/admin/courses
+router.use("/courses", coursesRoutes);
 
 module.exports = router;
