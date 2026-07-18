@@ -10,6 +10,8 @@ const {
   cancelAppointment,
   getAvailableDoctors,
 } = require("./appointments/patient-appointments.controller");
+const { getPackages, getPackageById } = require("./packages/patient-packages.controller");
+const { getDigitalProducts, getDigitalProductById } = require("./digital-products/patient-digital-products.controller");
 
 const router = express.Router();
 
@@ -21,20 +23,18 @@ router.get("/profile", authMiddleware, patientMiddleware, getProfile);
 router.put("/profile", authMiddleware, patientMiddleware, updateProfile);
 
 // ─── Appointments ─────────────────────────────────────────────────────────────
-
-// GET  /api/patient/appointments/doctors  - Browse doctors before booking
 router.get("/appointments/doctors", authMiddleware, patientMiddleware, getAvailableDoctors);
-
-// GET  /api/patient/appointments          - My all appointments
 router.get("/appointments", authMiddleware, patientMiddleware, getMyAppointments);
-
-// POST /api/patient/appointments          - Book new appointment
 router.post("/appointments", authMiddleware, patientMiddleware, bookAppointment);
-
-// GET  /api/patient/appointments/:id      - Single appointment detail
 router.get("/appointments/:id", authMiddleware, patientMiddleware, getAppointmentById);
-
-// PATCH /api/patient/appointments/:id/cancel - Cancel appointment
 router.patch("/appointments/:id/cancel", authMiddleware, patientMiddleware, cancelAppointment);
+
+// ─── Packages ─────────────────────────────────────────────────────────────────
+router.get("/packages", authMiddleware, patientMiddleware, getPackages);
+router.get("/packages/:id", authMiddleware, patientMiddleware, getPackageById);
+
+// ─── Digital Products ─────────────────────────────────────────────────────────
+router.get("/digital-products", authMiddleware, patientMiddleware, getDigitalProducts);
+router.get("/digital-products/:id", authMiddleware, patientMiddleware, getDigitalProductById);
 
 module.exports = router;
