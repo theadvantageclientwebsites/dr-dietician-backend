@@ -12,6 +12,7 @@ const {
 } = require("./appointments/patient-appointments.controller");
 const { getPackages, getPackageById } = require("./packages/patient-packages.controller");
 const { getDigitalProducts, getDigitalProductById } = require("./digital-products/patient-digital-products.controller");
+const { createOrder, verifyPayment, getMyOrders } = require("./payments/payments.controller");
 
 const router = express.Router();
 
@@ -36,5 +37,10 @@ router.get("/packages/:id", authMiddleware, patientMiddleware, getPackageById);
 // ─── Digital Products ─────────────────────────────────────────────────────────
 router.get("/digital-products", authMiddleware, patientMiddleware, getDigitalProducts);
 router.get("/digital-products/:id", authMiddleware, patientMiddleware, getDigitalProductById);
+
+// ─── Payments ─────────────────────────────────────────────────────────────────
+router.post("/payments/create-order", authMiddleware, patientMiddleware, createOrder);
+router.post("/payments/verify", authMiddleware, patientMiddleware, verifyPayment);
+router.get("/payments/my-orders", authMiddleware, patientMiddleware, getMyOrders);
 
 module.exports = router;

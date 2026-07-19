@@ -75,6 +75,7 @@ model User {
   appointmentsAsPatient Appointment[]      @relation("PatientAppointments")
   appointmentsAsDoctor  Appointment[]      @relation("DoctorAppointments")
   courseEnrollments     CourseEnrollment[] @relation("InternEnrollments")
+  orders                Order[]            @relation("PatientOrders")
 }
 
 model Appointment {
@@ -256,4 +257,45 @@ model LessonProgress {
   lesson     Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
   @@unique([enrollmentId, lessonId])
+}
+
+// ─── Payment Models ───────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum OrderItemType {
+  PACKAGE
+  DIGITAL_PRODUCT
+  SERVICE
+}
+
+enum PackageDuration {
+  ONE_MONTH
+  THREE_MONTHS
+  SIX_MONTHS
+}
+
+model Order {
+  id                 String          @id @default(uuid())
+  patientId          String
+  itemType           OrderItemType
+  itemId             String
+  itemName           String
+  amount             Float
+  currency           String          @default("INR")
+  duration           PackageDuration?
+  status             OrderStatus     @default(PENDING)
+  razorpayOrderId    String?         @unique
+  razorpayPaymentId  String?         @unique
+  razorpaySignature  String?
+  paidAt             DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  patient   User @relation("PatientOrders", fields: [patientId], references: [id], onDelete: Cascade)
 }
