@@ -6,4 +6,6 @@ module.exports = {
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET || "supersecretkey",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  razorpayKeyId: process.env.RAZORPAY_KEY_ID,
+  razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
 };

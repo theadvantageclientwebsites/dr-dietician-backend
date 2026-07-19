@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const prisma = require("../../../lib/prisma");
 const razorpay = require("../../../lib/razorpay");
+const { razorpayKeyId, razorpayKeySecret } = require("../../../config/env");
 
 // Duration label to months mapping
 const DURATION_LABEL = {
@@ -90,7 +91,7 @@ const createOrder = async (patientId, data) => {
     orderId: razorpayOrder.id,       // Send to frontend for Razorpay popup
     amount: razorpayOrder.amount,    // in paise
     currency: razorpayOrder.currency,
-    keyId: process.env.RAZORPAY_KEY_ID,  // Frontend needs this to open popup
+    keyId: razorpayKeyId,  // Frontend needs this to open popup
     itemName,
     dbOrderId: order.id,
   };
@@ -118,7 +119,7 @@ const verifyPayment = async (patientId, data) => {
 
   // Verify signature — HMAC SHA256
   const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .createHmac("sha256", razorpayKeySecret)
     .update(`${razorpayOrderId}|${razorpayPaymentId}`)
     .digest("hex");
 
