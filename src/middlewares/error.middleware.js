@@ -23,6 +23,13 @@ module.exports = (err, req, res, next) => {
     "passed field is required (true/false)",
     "Status is required",
     "isActive field is required",
+    "At least one field is required: dateTime, type, or notes",
+    "Cannot update a completed appointment",
+    "Cannot update a cancelled appointment",
+    "Invalid dateTime format. Use ISO 8601",
+    "Appointment date must be in the future",
+    "Doctor already has an appointment at this time. Please choose another slot.",
+    "Invalid type. Use ONLINE or IN_PERSON",
   ];
 
   if (badRequestMessages.some((msg) => message.includes(msg))) {

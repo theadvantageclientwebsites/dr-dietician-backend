@@ -110,6 +110,93 @@ const getAppointmentById = async (doctorId, appointmentId) => {
   return appointment;
 };
 
+const updateAppointment = async (doctorId, appointmentId, data) => {
+  const { dateTime, type, notes } = data;
+
+  if (dateTime === undefined && type === undefined && notes === undefined) {
+    throw new Error("At least one field is required: dateTime, type, or notes");
+  }
+
+  const appointment = await prisma.appointment.findFirst({
+    where: { id: appointmentId, doctorId },
+  });
+
+  if (!appointment) throw new Error("Appointment not found");
+
+  if (appointment.status === "COMPLETED") {
+    throw new Error("Cannot update a completed appointment");
+  }
+
+  if (appointment.status === "CANCELLED") {
+    throw new Error("Cannot update a cancelled appointment");
+  }
+
+  const updateData = {};
+
+  if (dateTime !== undefined) {
+    const appointmentDate = new Date(dateTime);
+    if (Number.isNaN(appointmentDate.getTime())) {
+      throw new Error("Invalid dateTime format. Use ISO 8601");
+    }
+    if (appointmentDate <= new Date()) {
+      throw new Error("Appointment date must be in the future");
+    }
+
+    const conflict = await prisma.appointment.findFirst({
+      where: {
+        doctorId,
+        dateTime: appointmentDate,
+        status: { in: ["PENDING", "CONFIRMED"] },
+        id: { not: appointmentId },
+      },
+    });
+
+    if (conflict) {
+      throw new Error("Doctor already has an appointment at this time. Please choose another slot.");
+    }
+
+    updateData.dateTime = appointmentDate;
+  }
+
+  if (type !== undefined) {
+    const normalizedType = type.toUpperCase();
+    if (!["ONLINE", "IN_PERSON"].includes(normalizedType)) {
+      throw new Error("Invalid type. Use ONLINE or IN_PERSON");
+    }
+    updateData.type = normalizedType;
+  }
+
+  if (notes !== undefined) updateData.notes = notes;
+
+  return prisma.appointment.update({
+    where: { id: appointmentId },
+    data: updateData,
+    select: {
+      id: true,
+      dateTime: true,
+      type: true,
+      status: true,
+      notes: true,
+      updatedAt: true,
+      patient: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          profilePhotoUrl: true,
+          patientProfile: {
+            select: {
+              phoneNumber: true,
+              age: true,
+              gender: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
 const updateAppointmentStatus = async (doctorId, appointmentId, status, notes) => {
   const appointment = await prisma.appointment.findFirst({
     where: { id: appointmentId, doctorId },
@@ -142,4 +229,9 @@ const updateAppointmentStatus = async (doctorId, appointmentId, status, notes) =
   });
 };
 
-module.exports = { getMyAppointments, getAppointmentById, updateAppointmentStatus };
+module.exports = {
+  getMyAppointments,
+  getAppointmentById,
+  updateAppointment,
+  updateAppointmentStatus,
+};

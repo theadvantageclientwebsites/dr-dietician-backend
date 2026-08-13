@@ -3,7 +3,12 @@ const authMiddleware = require("../../middlewares/auth.middleware");
 const doctorMiddleware = require("../../middlewares/doctor.middleware");
 
 const { getDashboard } = require("./dashboard/doctor-dashboard.controller");
-const { getMyAppointments, getAppointmentById, updateAppointmentStatus } = require("./appointments/doctor-appointments.controller");
+const {
+  getMyAppointments,
+  getAppointmentById,
+  updateAppointment,
+  updateAppointmentStatus,
+} = require("./appointments/doctor-appointments.controller");
 const { getMyPatients, getPatientById } = require("./patients/doctor-patients.controller");
 const { getProfile, updateProfile } = require("./profile/doctor-profile.controller");
 const { uploadBloodReport, getBloodReports, getBloodReportById, updateBloodReport, deleteBloodReport } = require("./blood-reports/blood-reports.controller");
@@ -21,6 +26,7 @@ router.put("/profile", authMiddleware, doctorMiddleware, updateProfile);
 router.get("/appointments", authMiddleware, doctorMiddleware, getMyAppointments);
 router.get("/appointments/:id", authMiddleware, doctorMiddleware, getAppointmentById);
 router.patch("/appointments/:id/status", authMiddleware, doctorMiddleware, updateAppointmentStatus);
+router.patch("/appointments/:id", authMiddleware, doctorMiddleware, updateAppointment);
 
 // ─── Patients ─────────────────────────────────────────────────────────────────
 router.get("/patients", authMiddleware, doctorMiddleware, getMyPatients);

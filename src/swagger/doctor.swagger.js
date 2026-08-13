@@ -383,6 +383,41 @@
  *         description: Full appointment details with patient profile
  *       404:
  *         description: Appointment not found
+ *   patch:
+ *     tags: [Doctor - Appointments]
+ *     summary: Update appointment (reschedule date/time, type, or notes)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Appointment ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               dateTime:
+ *                 type: string
+ *                 example: "2026-08-20T14:00:00.000Z"
+ *               type:
+ *                 type: string
+ *                 enum: [ONLINE, IN_PERSON]
+ *               notes:
+ *                 type: string
+ *                 example: "Rescheduled to clinic visit"
+ *     responses:
+ *       200:
+ *         description: Appointment updated
+ *       400:
+ *         description: Invalid update (completed/cancelled, conflict, etc.)
+ *       404:
+ *         description: Appointment not found
  *
  * /doctor/appointments/{id}/status:
  *   patch:

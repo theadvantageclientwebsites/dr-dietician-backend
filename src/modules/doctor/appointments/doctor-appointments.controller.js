@@ -16,6 +16,14 @@ const getAppointmentById = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+const updateAppointment = async (req, res, next) => {
+  try {
+    const doctorId = req.user.userId || req.user.id;
+    const data = await appointmentsService.updateAppointment(doctorId, req.params.id, req.body);
+    res.status(200).json({ success: true, message: "Appointment updated successfully", data });
+  } catch (error) { next(error); }
+};
+
 const updateAppointmentStatus = async (req, res, next) => {
   try {
     const doctorId = req.user.userId || req.user.id;
@@ -26,4 +34,9 @@ const updateAppointmentStatus = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { getMyAppointments, getAppointmentById, updateAppointmentStatus };
+module.exports = {
+  getMyAppointments,
+  getAppointmentById,
+  updateAppointment,
+  updateAppointmentStatus,
+};
