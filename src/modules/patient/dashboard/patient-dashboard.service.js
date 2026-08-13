@@ -1,4 +1,8 @@
 const prisma = require("../../../lib/prisma");
+const {
+  withRescheduleInfo,
+  patientAppointmentSelect,
+} = require("../appointments/patient-appointments.service");
 
 const getPatientDashboard = async (patientId) => {
   const today = new Date();
@@ -44,20 +48,10 @@ const getPatientDashboard = async (patientId) => {
           type: true,
           status: true,
           notes: true,
-          doctor: {
-            select: {
-              id: true,
-              fullName: true,
-              profilePhotoUrl: true,
-              doctorProfile: {
-                select: {
-                  specialization: true,
-                  hospitalName: true,
-                  phoneNumber: true,
-                },
-              },
-            },
-          },
+          previousDateTime: true,
+          rescheduledAt: true,
+          rescheduledByDoctor: true,
+          doctor: patientAppointmentSelect.doctor,
         },
       }),
 
@@ -140,7 +134,9 @@ const getPatientDashboard = async (patientId) => {
         vitalsStatus,
       },
     },
-    upcomingAppointment: upcomingAppointment || null,
+    upcomingAppointment: upcomingAppointment
+      ? withRescheduleInfo(upcomingAppointment)
+      : null,
     nextCheckup: {
       days: nextCheckupDays,
       label: nextCheckupLabel,

@@ -1,5 +1,57 @@
 const prisma = require("../../../lib/prisma");
 
+const patientAppointmentSelect = {
+  id: true,
+  dateTime: true,
+  type: true,
+  status: true,
+  notes: true,
+  previousDateTime: true,
+  rescheduledAt: true,
+  rescheduledByDoctor: true,
+  createdAt: true,
+  updatedAt: true,
+  doctor: {
+    select: {
+      id: true,
+      fullName: true,
+      profilePhotoUrl: true,
+      doctorProfile: {
+        select: {
+          specialization: true,
+          qualification: true,
+          hospitalName: true,
+          clinicAddress: true,
+          phoneNumber: true,
+          yearsOfExperience: true,
+        },
+      },
+    },
+  },
+};
+
+const withRescheduleInfo = (appointment) => {
+  if (!appointment) return appointment;
+
+  const { rescheduledByDoctor, rescheduledAt, previousDateTime, doctor, ...rest } = appointment;
+
+  return {
+    ...rest,
+    rescheduledByDoctor,
+    rescheduledAt,
+    previousDateTime,
+    doctor,
+    rescheduleInfo: rescheduledByDoctor
+      ? {
+          rescheduledByDoctor: true,
+          rescheduledAt,
+          previousDateTime,
+          message: `Rescheduled by ${doctor?.fullName || "your doctor"}`,
+        }
+      : null,
+  };
+};
+
 const getMyAppointments = async (patientId, query) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
@@ -15,13 +67,11 @@ const getMyAppointments = async (patientId, query) => {
     where.type = query.type.toUpperCase();
   }
 
-  // upcoming filter
   if (query.upcoming === "true") {
     where.dateTime = { gte: new Date() };
     where.status = { in: ["PENDING", "CONFIRMED"] };
   }
 
-  // past filter
   if (query.past === "true") {
     where.dateTime = { lt: new Date() };
   }
@@ -33,33 +83,11 @@ const getMyAppointments = async (patientId, query) => {
     skip,
     take: limit,
     orderBy: { dateTime: "desc" },
-    select: {
-      id: true,
-      dateTime: true,
-      type: true,
-      status: true,
-      notes: true,
-      createdAt: true,
-      doctor: {
-        select: {
-          id: true,
-          fullName: true,
-          profilePhotoUrl: true,
-          doctorProfile: {
-            select: {
-              specialization: true,
-              hospitalName: true,
-              clinicAddress: true,
-              phoneNumber: true,
-            },
-          },
-        },
-      },
-    },
+    select: patientAppointmentSelect,
   });
 
   return {
-    items,
+    items: items.map(withRescheduleInfo),
     pagination: {
       page,
       limit,
@@ -73,32 +101,14 @@ const getAppointmentById = async (patientId, appointmentId) => {
   const appointment = await prisma.appointment.findFirst({
     where: {
       id: appointmentId,
-      patientId, // ensure patient can only view their own appointments
+      patientId,
     },
     select: {
-      id: true,
-      dateTime: true,
-      type: true,
-      status: true,
-      notes: true,
-      createdAt: true,
-      updatedAt: true,
+      ...patientAppointmentSelect,
       doctor: {
         select: {
-          id: true,
-          fullName: true,
+          ...patientAppointmentSelect.doctor.select,
           email: true,
-          profilePhotoUrl: true,
-          doctorProfile: {
-            select: {
-              specialization: true,
-              qualification: true,
-              hospitalName: true,
-              clinicAddress: true,
-              phoneNumber: true,
-              yearsOfExperience: true,
-            },
-          },
         },
       },
     },
@@ -106,7 +116,7 @@ const getAppointmentById = async (patientId, appointmentId) => {
 
   if (!appointment) throw new Error("Appointment not found");
 
-  return appointment;
+  return withRescheduleInfo(appointment);
 };
 
 const bookAppointment = async (patientId, data) => {
@@ -116,7 +126,6 @@ const bookAppointment = async (patientId, data) => {
     throw new Error("doctorId and dateTime are required");
   }
 
-  // Verify doctor exists and is active
   const doctor = await prisma.user.findFirst({
     where: {
       id: doctorId,
@@ -129,13 +138,11 @@ const bookAppointment = async (patientId, data) => {
   if (!doctor) throw new Error("Doctor not found or not available");
   if (!doctor.doctorProfile?.isApproved) throw new Error("Doctor is not approved yet");
 
-  // Validate dateTime is in the future
   const appointmentDate = new Date(dateTime);
   if (appointmentDate <= new Date()) {
     throw new Error("Appointment date must be in the future");
   }
 
-  // Check if doctor already has an appointment at the same time
   const conflict = await prisma.appointment.findFirst({
     where: {
       doctorId,
@@ -155,31 +162,10 @@ const bookAppointment = async (patientId, data) => {
       status: "PENDING",
       notes: notes || null,
     },
-    select: {
-      id: true,
-      dateTime: true,
-      type: true,
-      status: true,
-      notes: true,
-      createdAt: true,
-      doctor: {
-        select: {
-          id: true,
-          fullName: true,
-          profilePhotoUrl: true,
-          doctorProfile: {
-            select: {
-              specialization: true,
-              hospitalName: true,
-              phoneNumber: true,
-            },
-          },
-        },
-      },
-    },
+    select: patientAppointmentSelect,
   });
 
-  return appointment;
+  return withRescheduleInfo(appointment);
 };
 
 const cancelAppointment = async (patientId, appointmentId) => {
@@ -203,27 +189,12 @@ const cancelAppointment = async (patientId, appointmentId) => {
   const updated = await prisma.appointment.update({
     where: { id: appointmentId },
     data: { status: "CANCELLED" },
-    select: {
-      id: true,
-      dateTime: true,
-      type: true,
-      status: true,
-      doctor: {
-        select: {
-          id: true,
-          fullName: true,
-          doctorProfile: {
-            select: { specialization: true },
-          },
-        },
-      },
-    },
+    select: patientAppointmentSelect,
   });
 
-  return updated;
+  return withRescheduleInfo(updated);
 };
 
-// Get list of available doctors for booking
 const getAvailableDoctors = async (query) => {
   const where = {
     role: "DOCTOR",
@@ -282,4 +253,6 @@ module.exports = {
   bookAppointment,
   cancelAppointment,
   getAvailableDoctors,
+  withRescheduleInfo,
+  patientAppointmentSelect,
 };

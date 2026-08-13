@@ -156,6 +156,9 @@ const updateAppointment = async (doctorId, appointmentId, data) => {
     }
 
     updateData.dateTime = appointmentDate;
+    updateData.previousDateTime = appointment.dateTime;
+    updateData.rescheduledAt = new Date();
+    updateData.rescheduledByDoctor = true;
   }
 
   if (type !== undefined) {
@@ -177,6 +180,9 @@ const updateAppointment = async (doctorId, appointmentId, data) => {
       type: true,
       status: true,
       notes: true,
+      previousDateTime: true,
+      rescheduledAt: true,
+      rescheduledByDoctor: true,
       updatedAt: true,
       patient: {
         select: {

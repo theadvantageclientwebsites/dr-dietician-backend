@@ -81,15 +81,18 @@ model User {
 }
 
 model Appointment {
-  id        String            @id @default(uuid())
-  patientId String
-  doctorId  String
-  dateTime  DateTime
-  type      AppointmentType   @default(ONLINE)
-  status    AppointmentStatus @default(PENDING)
-  notes     String?
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  id                   String            @id @default(uuid())
+  patientId            String
+  doctorId             String
+  dateTime             DateTime
+  type                 AppointmentType   @default(ONLINE)
+  status               AppointmentStatus @default(PENDING)
+  notes                String?
+  previousDateTime     DateTime?
+  rescheduledAt        DateTime?
+  rescheduledByDoctor  Boolean           @default(false)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
   patient   User @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
   doctor    User @relation("DoctorAppointments",  fields: [doctorId],  references: [id], onDelete: Cascade)
