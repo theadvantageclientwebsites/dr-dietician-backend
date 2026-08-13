@@ -4,6 +4,7 @@ const uploadRoutes = require("../modules/upload/upload.routes");
 const adminRoutes = require("../modules/admin/admin.routes");
 const internCoursesRoutes = require("../modules/intern/courses/intern-courses.routes");
 const patientRoutes = require("../modules/patient/patient.routes");
+const doctorRoutes = require("../modules/doctor/doctor.routes");
 
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use("/upload", uploadRoutes);
 router.use("/admin", adminRoutes);
 router.use("/intern/courses", internCoursesRoutes);
 router.use("/patient", patientRoutes);
+router.use("/doctor", doctorRoutes);
 
 module.exports = router;
