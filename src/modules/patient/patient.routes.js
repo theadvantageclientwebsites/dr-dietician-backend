@@ -13,6 +13,7 @@ const {
 const { getPackages, getPackageById } = require("./packages/patient-packages.controller");
 const { getDigitalProducts, getDigitalProductById } = require("./digital-products/patient-digital-products.controller");
 const { createOrder, verifyPayment, getMyOrders } = require("./payments/payments.controller");
+const { getPatientBloodReports } = require("../doctor/blood-reports/blood-reports.service");
 
 const router = express.Router();
 
@@ -42,5 +43,14 @@ router.get("/digital-products/:id", authMiddleware, patientMiddleware, getDigita
 router.post("/payments/create-order", authMiddleware, patientMiddleware, createOrder);
 router.post("/payments/verify", authMiddleware, patientMiddleware, verifyPayment);
 router.get("/payments/my-orders", authMiddleware, patientMiddleware, getMyOrders);
+
+// ─── Blood Reports ────────────────────────────────────────────────────────────
+router.get("/blood-reports", authMiddleware, patientMiddleware, async (req, res, next) => {
+  try {
+    const patientId = req.user.userId || req.user.id;
+    const data = await getPatientBloodReports(patientId, req.query);
+    res.status(200).json({ success: true, message: "Blood reports fetched successfully", data });
+  } catch (error) { next(error); }
+});
 
 module.exports = router;

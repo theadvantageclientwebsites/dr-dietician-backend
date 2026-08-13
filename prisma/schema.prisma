@@ -76,6 +76,8 @@ model User {
   appointmentsAsDoctor  Appointment[]      @relation("DoctorAppointments")
   courseEnrollments     CourseEnrollment[] @relation("InternEnrollments")
   orders                Order[]            @relation("PatientOrders")
+  bloodReportsAsPatient BloodReport[]      @relation("PatientBloodReports")
+  bloodReportsAsDoctor  BloodReport[]      @relation("DoctorBloodReports")
 }
 
 model Appointment {
@@ -298,4 +300,20 @@ model Order {
   updatedAt          DateTime        @updatedAt
 
   patient   User @relation("PatientOrders", fields: [patientId], references: [id], onDelete: Cascade)
+}
+
+// ─── Blood Reports ────────────────────────────────────────────────────────────
+
+model BloodReport {
+  id          String   @id @default(uuid())
+  patientId   String
+  doctorId    String
+  title       String
+  fileUrl     String
+  notes       String?
+  uploadedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  patient User @relation("PatientBloodReports", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor  User @relation("DoctorBloodReports",  fields: [doctorId],  references: [id], onDelete: Cascade)
 }
