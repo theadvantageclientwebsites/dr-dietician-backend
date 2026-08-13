@@ -2,6 +2,9 @@ module.exports = (err, req, res, next) => {
   console.error("Error:", err.message);
   console.error("Stack:", err.stack);
 
+  // Guard: if response already sent, do nothing
+  if (res.headersSent) return;
+
   let statusCode = 500;
   let message = err.message || "Internal Server Error";
 
@@ -27,12 +30,7 @@ module.exports = (err, req, res, next) => {
   }
 
   // 404 — Not found errors
-  const notFoundMessages = [
-    "not found",
-    "Not found",
-  ];
-
-  if (notFoundMessages.some((msg) => message.includes(msg))) {
+  if (message.toLowerCase().includes("not found")) {
     statusCode = 404;
   }
 
@@ -49,11 +47,20 @@ module.exports = (err, req, res, next) => {
 
   if (err.code === "P2003") {
     statusCode = 400;
-    message = "Related record not found or cannot be deleted due to existing references";
+    message = "Cannot delete this record because it has related data. Please remove related records first.";
   }
 
-  res.status(statusCode).json({
-    success: false,
-    message,
-  });
+  if (err.code === "P2014") {
+    statusCode = 400;
+    message = "This record is referenced by other records and cannot be deleted.";
+  }
+
+  try {
+    res.status(statusCode).json({
+      success: false,
+      message,
+    });
+  } catch (jsonErr) {
+    console.error("Failed to send error response:", jsonErr);
+  }
 };
