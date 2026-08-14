@@ -10,6 +10,13 @@ const {
   updateAppointmentStatus,
 } = require("./appointments/doctor-appointments.controller");
 const { getMyPatients, getPatientById } = require("./patients/doctor-patients.controller");
+const {
+  upsertPlan,
+  submitPlan,
+  getMyPlans,
+  getPlanById,
+  getPlanForPatient,
+} = require("./diet-plans/diet-plans.controller");
 const { getProfile, updateProfile } = require("./profile/doctor-profile.controller");
 const { uploadBloodReport, getBloodReports, getBloodReportById, updateBloodReport, deleteBloodReport } = require("./blood-reports/blood-reports.controller");
 
@@ -30,7 +37,14 @@ router.patch("/appointments/:id", authMiddleware, doctorMiddleware, updateAppoin
 
 // ─── Patients ─────────────────────────────────────────────────────────────────
 router.get("/patients", authMiddleware, doctorMiddleware, getMyPatients);
+router.get("/patients/:patientId/diet-plan", authMiddleware, doctorMiddleware, getPlanForPatient);
 router.get("/patients/:id", authMiddleware, doctorMiddleware, getPatientById);
+
+// ─── Diet Plans ───────────────────────────────────────────────────────────────
+router.post("/diet-plans", authMiddleware, doctorMiddleware, upsertPlan);
+router.get("/diet-plans", authMiddleware, doctorMiddleware, getMyPlans);
+router.patch("/diet-plans/:id/submit", authMiddleware, doctorMiddleware, submitPlan);
+router.get("/diet-plans/:id", authMiddleware, doctorMiddleware, getPlanById);
 
 // ─── Blood Reports ────────────────────────────────────────────────────────────
 router.post("/blood-reports", authMiddleware, doctorMiddleware, uploadBloodReport);

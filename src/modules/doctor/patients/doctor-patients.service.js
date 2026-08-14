@@ -1,4 +1,5 @@
 const prisma = require("../../../lib/prisma");
+const { withDueInfo, withMeta } = require("../../diet-plans/diet-plan.helpers");
 
 const getMyPatients = async (doctorId, query) => {
   const page = Number(query.page) || 1;
@@ -84,11 +85,25 @@ const getMyPatients = async (doctorId, query) => {
             status: true,
             duration: true,
             endsAt: true,
+            assignedAt: true,
             package: { select: { id: true, name: true, category: true } },
+            dietPlan: {
+              select: { id: true, status: true, submittedAt: true, duration: true },
+            },
           },
         }),
       ]);
-      return { ...patient, lastAppointment, packageSubscription };
+      return {
+        ...patient,
+        lastAppointment,
+        packageSubscription,
+        dietPlan: packageSubscription
+          ? {
+              plan: packageSubscription.dietPlan || null,
+              ...withDueInfo(packageSubscription.assignedAt, packageSubscription.dietPlan),
+            }
+          : null,
+      };
     })
   );
 
@@ -167,10 +182,21 @@ const getPatientById = async (doctorId, patientId) => {
       package: {
         select: { id: true, name: true, category: true, features: true },
       },
+      dietPlan: true,
     },
   });
 
-  return { ...patient, appointmentHistory, packageSubscription };
+  const dietPlan = packageSubscription
+    ? {
+        plan: packageSubscription.dietPlan ? withMeta({
+          ...packageSubscription.dietPlan,
+          subscription: { assignedAt: packageSubscription.assignedAt },
+        }) : null,
+        ...withDueInfo(packageSubscription.assignedAt, packageSubscription.dietPlan),
+      }
+    : null;
+
+  return { ...patient, appointmentHistory, packageSubscription, dietPlan };
 };
 
 module.exports = { getMyPatients, getPatientById };

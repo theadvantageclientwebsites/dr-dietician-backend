@@ -548,6 +548,57 @@
  *       200:
  *         description: Doctor assigned, subscription becomes ACTIVE
  *
+ * /admin/diet-plans:
+ *   get:
+ *     tags: [Admin - Diet Plans]
+ *     summary: List diet plans (use status=PENDING_APPROVAL for the queue)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [DRAFT, PENDING_APPROVAL, APPROVED, REJECTED] }
+ *     responses:
+ *       200:
+ *         description: Paginated diet plans
+ *
+ * /admin/diet-plans/{id}/approve:
+ *   patch:
+ *     tags: [Admin - Diet Plans]
+ *     summary: Approve a diet plan so the patient can see it
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Approved
+ *
+ * /admin/diet-plans/{id}/reject:
+ *   patch:
+ *     tags: [Admin - Diet Plans]
+ *     summary: Reject a diet plan (doctor can edit and resubmit)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason: { type: string }
+ *     responses:
+ *       200:
+ *         description: Rejected
+ *
  * /admin/digital-products:
  *   post:
  *     tags: [Admin - Digital Products]

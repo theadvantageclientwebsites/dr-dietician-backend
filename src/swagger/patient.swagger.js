@@ -348,6 +348,16 @@
  *       200:
  *         description: Paginated subscriptions
  *
+ * /patient/diet-plan:
+ *   get:
+ *     tags: [Patient - Diet Plan]
+ *     summary: Get my diet plan (full meals only after admin approval)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: visible true + plan when approved; otherwise message only
+ *
  * /intern/courses:
  *   get:
  *     tags: [Intern - Courses]

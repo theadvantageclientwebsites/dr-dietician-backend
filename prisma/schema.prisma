@@ -80,6 +80,8 @@ model User {
   subscriptionsAsDoctor     Subscription[]     @relation("DoctorSubscriptions")
   bloodReportsAsPatient     BloodReport[]      @relation("PatientBloodReports")
   bloodReportsAsDoctor      BloodReport[]      @relation("DoctorBloodReports")
+  dietPlansAsPatient        DietPlan[]         @relation("PatientDietPlans")
+  dietPlansAsDoctor         DietPlan[]         @relation("DoctorDietPlans")
 }
 
 model Appointment {
@@ -338,6 +340,7 @@ model Subscription {
   package Package  @relation(fields: [packageId], references: [id], onDelete: Restrict)
   order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   doctor  User?    @relation("DoctorSubscriptions", fields: [doctorId], references: [id], onDelete: SetNull)
+  dietPlan DietPlan?
 
   @@index([patientId, status])
   @@index([doctorId])
@@ -357,4 +360,49 @@ model BloodReport {
 
   patient User @relation("PatientBloodReports", fields: [patientId], references: [id], onDelete: Cascade)
   doctor  User @relation("DoctorBloodReports",  fields: [doctorId],  references: [id], onDelete: Cascade)
+}
+
+// ─── Diet Plans ───────────────────────────────────────────────────────────────
+
+enum DietPlanDuration {
+  SEVEN_DAYS
+  TEN_DAYS
+  FIFTEEN_DAYS
+}
+
+enum DietPlanStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
+model DietPlan {
+  id               String           @id @default(uuid())
+  patientId        String
+  doctorId         String
+  subscriptionId   String           @unique
+  duration         DietPlanDuration
+  calorieTarget    Int?
+  foodsToEat       String[]
+  foodsToAvoid     String[]
+  breakfast        String?
+  lunch            String?
+  dinner           String?
+  snacks           String?
+  notes            String?
+  status           DietPlanStatus   @default(DRAFT)
+  submittedAt      DateTime?
+  approvedAt       DateTime?
+  rejectedAt       DateTime?
+  rejectionReason  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  patient      User         @relation("PatientDietPlans", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor       User         @relation("DoctorDietPlans", fields: [doctorId], references: [id], onDelete: Cascade)
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId, status])
+  @@index([patientId, status])
 }

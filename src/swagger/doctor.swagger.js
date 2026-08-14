@@ -563,4 +563,59 @@
  *                     notes: "Follow-up"
  *       404:
  *         description: Patient not found or not associated with you
+ *
+ * /doctor/diet-plans:
+ *   post:
+ *     tags: [Doctor - Diet Plans]
+ *     summary: Create or update a draft diet plan for an assigned package patient
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [patientId, duration]
+ *             properties:
+ *               patientId: { type: string }
+ *               duration: { type: string, enum: [SEVEN_DAYS, TEN_DAYS, FIFTEEN_DAYS] }
+ *               calorieTarget: { type: number, example: 1800 }
+ *               foodsToEat: { type: array, items: { type: string } }
+ *               foodsToAvoid: { type: array, items: { type: string } }
+ *               breakfast: { type: string }
+ *               lunch: { type: string }
+ *               dinner: { type: string }
+ *               snacks: { type: string }
+ *               notes: { type: string }
+ *     responses:
+ *       200:
+ *         description: Draft saved
+ *   get:
+ *     tags: [Doctor - Diet Plans]
+ *     summary: List my diet plans
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [DRAFT, PENDING_APPROVAL, APPROVED, REJECTED] }
+ *     responses:
+ *       200:
+ *         description: Paginated diet plans
+ *
+ * /doctor/diet-plans/{id}/submit:
+ *   patch:
+ *     tags: [Doctor - Diet Plans]
+ *     summary: Submit draft/rejected plan for admin approval
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Submitted
  */

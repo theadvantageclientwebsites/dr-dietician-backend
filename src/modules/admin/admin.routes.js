@@ -10,6 +10,7 @@ const doctorsRoutes = require("./doctors/doctors.routes");
 const appointmentsRoutes = require("./appointments/appointments.routes");
 const packagesRoutes = require("./packages/packages.routes");
 const subscriptionsRoutes = require("./subscriptions/subscriptions.routes");
+const dietPlansRoutes = require("./diet-plans/diet-plans.routes");
 const digitalProductsRoutes = require("./digital-products/digital-products.routes");
 const coursesRoutes = require("./courses/courses.routes");
 const revenueRoutes = require("./revenue/revenue.routes");
@@ -40,6 +41,7 @@ router.use("/packages", packagesRoutes);
 
 // Package purchases waiting for doctor assignment
 router.use("/subscriptions", subscriptionsRoutes);
+router.use("/diet-plans", dietPlansRoutes);
 
 // Use digital products routes - all routes under /api/admin/digital-products
 router.use("/digital-products", digitalProductsRoutes);

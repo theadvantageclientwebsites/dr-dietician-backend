@@ -1,6 +1,7 @@
 const prisma = require("../../../lib/prisma");
 const { withRescheduleInfo, patientAppointmentSelect } = require("../appointments/patient-appointments.service");
 const { withMeetingUsage } = require("../subscriptions/subscriptions.service");
+const { getMyDietPlan } = require("../diet-plans/diet-plans.service");
 
 const getPatientDashboard = async (patientId) => {
   const today = new Date();
@@ -175,9 +176,8 @@ const getPatientDashboard = async (patientId) => {
       availableDigitalProducts: digitalProductsCount,
     },
     activePackage: activeSubscription ? await withMeetingUsage(activeSubscription) : null,
-    // Placeholders for future features
-    dietPlan: null,       // Will be added when DietPlan schema is built
-    recentActivity: [],   // Will be added when Activity schema is built
+    dietPlan: await getMyDietPlan(patientId),
+    recentActivity: [],
   };
 };
 

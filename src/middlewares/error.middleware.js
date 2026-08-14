@@ -41,6 +41,15 @@ module.exports = (err, req, res, next) => {
     "Cannot assign a doctor to a cancelled package",
     "Cannot assign a doctor to an expired package",
     "name, category, price3Months, price6Months and price12Months are required",
+    "patientId is required",
+    "duration is required. Use SEVEN_DAYS, TEN_DAYS or FIFTEEN_DAYS",
+    "Patient is not assigned to you on an active package",
+    "Plan is waiting for admin approval and cannot be edited",
+    "Approved plan cannot be edited",
+    "Only draft or rejected plans can be submitted",
+    "Add at least breakfast, lunch or dinner before submitting",
+    "Only plans waiting for approval can be approved",
+    "Only plans waiting for approval can be rejected",
   ];
 
   if (badRequestMessages.some((msg) => message.includes(msg))) {

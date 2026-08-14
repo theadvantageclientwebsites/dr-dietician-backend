@@ -14,6 +14,7 @@ const { getPackages, getPackageById } = require("./packages/patient-packages.con
 const { getDigitalProducts, getDigitalProductById } = require("./digital-products/patient-digital-products.controller");
 const { createOrder, verifyPayment, dummyCheckout, getMyOrders } = require("./payments/payments.controller");
 const { getMySubscriptions, getActiveSubscription } = require("./subscriptions/subscriptions.controller");
+const { getMyDietPlan } = require("./diet-plans/diet-plans.controller");
 const { getPatientBloodReports } = require("../doctor/blood-reports/blood-reports.service");
 
 const router = express.Router();
@@ -39,6 +40,9 @@ router.get("/packages/:id", authMiddleware, patientMiddleware, getPackageById);
 // ─── My subscriptions ─────────────────────────────────────────────────────────
 router.get("/subscriptions/active", authMiddleware, patientMiddleware, getActiveSubscription);
 router.get("/subscriptions", authMiddleware, patientMiddleware, getMySubscriptions);
+
+// ─── Diet Plan ────────────────────────────────────────────────────────────────
+router.get("/diet-plan", authMiddleware, patientMiddleware, getMyDietPlan);
 
 // ─── Digital Products ─────────────────────────────────────────────────────────
 router.get("/digital-products", authMiddleware, patientMiddleware, getDigitalProducts);
