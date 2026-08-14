@@ -94,7 +94,7 @@
  *     summary: Upload blood report for a patient
  *     description: |
  *       First upload the PDF using POST /upload/blood-report, then use the returned fileUrl here.
- *       Only works for patients who have had at least one appointment with this doctor.
+ *       Works for patients with an appointment OR an active package assigned to this doctor.
  *     security:
  *       - bearerAuth: []
  *     requestBody:

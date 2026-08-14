@@ -1,5 +1,26 @@
 const prisma = require("../../../lib/prisma");
 
+const assertDoctorCanAccessPatient = async (doctorId, patientId) => {
+  const [hasAppointment, hasPackage] = await Promise.all([
+    prisma.appointment.findFirst({
+      where: { doctorId, patientId },
+      select: { id: true },
+    }),
+    prisma.subscription.findFirst({
+      where: {
+        doctorId,
+        patientId,
+        status: "ACTIVE",
+      },
+      select: { id: true },
+    }),
+  ]);
+
+  if (!hasAppointment && !hasPackage) {
+    throw new Error("Patient not found or not associated with you");
+  }
+};
+
 const uploadBloodReport = async (doctorId, data) => {
   const { patientId, title, fileUrl, notes } = data;
 
@@ -7,14 +28,7 @@ const uploadBloodReport = async (doctorId, data) => {
     throw new Error("patientId, title and fileUrl are required");
   }
 
-  // Verify this patient has had an appointment with this doctor
-  const hasAppointment = await prisma.appointment.findFirst({
-    where: { doctorId, patientId },
-  });
-
-  if (!hasAppointment) {
-    throw new Error("Patient not found or not associated with you");
-  }
+  await assertDoctorCanAccessPatient(doctorId, patientId);
 
   return prisma.bloodReport.create({
     data: {
