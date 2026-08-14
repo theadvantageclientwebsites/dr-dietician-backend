@@ -51,8 +51,10 @@ const getMyDietPlan = async (patientId) => {
 
   return {
     visible: false,
-    patientStatus,
-    message,
+    patientStatus: plan?.status === "PENDING_APPROVAL" ? "PENDING_APPROVAL" : "IN_PROGRESS",
+    message: plan?.status === "PENDING_APPROVAL"
+      ? "Your diet plan is being reviewed"
+      : "Your dietitian is preparing your plan",
     plan: null,
   };
 };
