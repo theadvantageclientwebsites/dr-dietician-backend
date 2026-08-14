@@ -11,6 +11,7 @@ const subscriptionSelect = {
   assignedAt: true,
   createdAt: true,
   updatedAt: true,
+  doctorId: true,
   package: {
     select: {
       id: true,
@@ -36,11 +37,14 @@ const subscriptionSelect = {
   },
 };
 
-const getMeetingsUsedThisMonth = async (patientId) => {
+const getMeetingsUsedThisMonth = async (subscription) => {
+  if (!subscription?.patientId) return 0;
+
   const { start, end } = monthRange();
+
   return prisma.appointment.count({
     where: {
-      patientId,
+      patientId: subscription.patientId,
       status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
       dateTime: { gte: start, lt: end },
     },
@@ -50,13 +54,17 @@ const getMeetingsUsedThisMonth = async (patientId) => {
 const withMeetingUsage = async (subscription) => {
   if (!subscription) return null;
 
-  const used = await getMeetingsUsedThisMonth(subscription.patientId);
-  const remaining = Math.max(0, subscription.meetingsPerMonth - used);
+  const used = await getMeetingsUsedThisMonth(subscription);
+  const limit = subscription.meetingsPerMonth || 4;
+  const remaining = Math.max(0, limit - used);
+  const { patientId, doctorId, ...rest } = subscription;
 
   return {
-    ...subscription,
+    ...rest,
+    meetingsPerMonth: limit,
     meetingsUsedThisMonth: used,
     meetingsRemainingThisMonth: remaining,
+    meetingsLabel: `${remaining} of ${limit} meetings left this month`,
   };
 };
 

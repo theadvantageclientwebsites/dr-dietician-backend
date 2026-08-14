@@ -77,6 +77,7 @@ const getPatientDashboard = async (patientId) => {
         select: {
           id: true,
           patientId: true,
+          doctorId: true,
           status: true,
           duration: true,
           meetingsPerMonth: true,
