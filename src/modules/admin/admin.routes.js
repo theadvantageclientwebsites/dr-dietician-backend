@@ -9,6 +9,7 @@ const internsRoutes = require("./interns/interns.routes");
 const doctorsRoutes = require("./doctors/doctors.routes");
 const appointmentsRoutes = require("./appointments/appointments.routes");
 const packagesRoutes = require("./packages/packages.routes");
+const subscriptionsRoutes = require("./subscriptions/subscriptions.routes");
 const digitalProductsRoutes = require("./digital-products/digital-products.routes");
 const coursesRoutes = require("./courses/courses.routes");
 const revenueRoutes = require("./revenue/revenue.routes");
@@ -36,6 +37,9 @@ router.use("/appointments", appointmentsRoutes);
 
 // Use package routes - all routes under /api/admin/packages
 router.use("/packages", packagesRoutes);
+
+// Package purchases waiting for doctor assignment
+router.use("/subscriptions", subscriptionsRoutes);
 
 // Use digital products routes - all routes under /api/admin/digital-products
 router.use("/digital-products", digitalProductsRoutes);

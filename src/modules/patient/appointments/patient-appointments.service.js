@@ -1,4 +1,5 @@
 const prisma = require("../../../lib/prisma");
+const { getActiveSubscription } = require("../subscriptions/subscriptions.service");
 
 const patientAppointmentSelect = {
   id: true,
@@ -138,6 +139,20 @@ const bookAppointment = async (patientId, data) => {
   if (!doctor) throw new Error("Doctor not found or not available");
   if (!doctor.doctorProfile?.isApproved) throw new Error("Doctor is not approved yet");
 
+  const subscription = await getActiveSubscription(patientId);
+  if (!subscription) {
+    throw new Error("An active package is required to book an appointment");
+  }
+  if (subscription.status === "PENDING_ASSIGNMENT" || !subscription.doctor?.id) {
+    throw new Error("Your package is waiting for admin to assign a doctor");
+  }
+  if (subscription.doctor.id !== doctorId) {
+    throw new Error("You can only book appointments with your assigned package doctor");
+  }
+  if (subscription.meetingsRemainingThisMonth <= 0) {
+    throw new Error("Monthly appointment limit reached (4 meetings). Try again next month.");
+  }
+
   const appointmentDate = new Date(dateTime);
   if (appointmentDate <= new Date()) {
     throw new Error("Appointment date must be in the future");
@@ -195,7 +210,13 @@ const cancelAppointment = async (patientId, appointmentId) => {
   return withRescheduleInfo(updated);
 };
 
-const getAvailableDoctors = async (query) => {
+const getAvailableDoctors = async (patientId, query) => {
+  const subscription = await getActiveSubscription(patientId);
+
+  if (subscription?.status === "PENDING_ASSIGNMENT" || (subscription && !subscription.doctor?.id)) {
+    return [];
+  }
+
   const where = {
     role: "DOCTOR",
     accountStatus: "ACTIVE",
@@ -203,6 +224,10 @@ const getAvailableDoctors = async (query) => {
       isApproved: true,
     },
   };
+
+  if (subscription?.doctor?.id) {
+    where.id = subscription.doctor.id;
+  }
 
   if (query.specialization) {
     where.doctorProfile = {

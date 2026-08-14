@@ -75,9 +75,11 @@ model User {
   appointmentsAsPatient Appointment[]      @relation("PatientAppointments")
   appointmentsAsDoctor  Appointment[]      @relation("DoctorAppointments")
   courseEnrollments     CourseEnrollment[] @relation("InternEnrollments")
-  orders                Order[]            @relation("PatientOrders")
-  bloodReportsAsPatient BloodReport[]      @relation("PatientBloodReports")
-  bloodReportsAsDoctor  BloodReport[]      @relation("DoctorBloodReports")
+  orders                    Order[]            @relation("PatientOrders")
+  subscriptionsAsPatient    Subscription[]     @relation("PatientSubscriptions")
+  subscriptionsAsDoctor     Subscription[]     @relation("DoctorSubscriptions")
+  bloodReportsAsPatient     BloodReport[]      @relation("PatientBloodReports")
+  bloodReportsAsDoctor      BloodReport[]      @relation("DoctorBloodReports")
 }
 
 model Appointment {
@@ -123,17 +125,19 @@ model DigitalProduct {
 }
 
 model Package {
-  id            String   @id @default(uuid())
-  name          String
-  category      String
-  description   String?
-  price1Month   Float
-  price3Months  Float
-  price6Months  Float
-  features      String[]
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(uuid())
+  name           String
+  category       String
+  description    String?
+  price3Months   Float
+  price6Months   Float
+  price12Months  Float
+  features       String[]
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  subscriptions  Subscription[]
 }
 
 model PatientProfile {
@@ -283,6 +287,14 @@ enum PackageDuration {
   ONE_MONTH
   THREE_MONTHS
   SIX_MONTHS
+  TWELVE_MONTHS
+}
+
+enum SubscriptionStatus {
+  PENDING_ASSIGNMENT
+  ACTIVE
+  EXPIRED
+  CANCELLED
 }
 
 model Order {
@@ -298,11 +310,37 @@ model Order {
   razorpayOrderId    String?         @unique
   razorpayPaymentId  String?         @unique
   razorpaySignature  String?
+  isDummy            Boolean         @default(false)
   paidAt             DateTime?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
-  patient   User @relation("PatientOrders", fields: [patientId], references: [id], onDelete: Cascade)
+  patient      User           @relation("PatientOrders", fields: [patientId], references: [id], onDelete: Cascade)
+  subscription Subscription?
+}
+
+model Subscription {
+  id               String             @id @default(uuid())
+  patientId        String
+  packageId        String
+  orderId          String             @unique
+  doctorId         String?
+  duration         PackageDuration
+  status           SubscriptionStatus @default(PENDING_ASSIGNMENT)
+  meetingsPerMonth Int                @default(4)
+  startsAt         DateTime
+  endsAt           DateTime
+  assignedAt       DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  patient User     @relation("PatientSubscriptions", fields: [patientId], references: [id], onDelete: Cascade)
+  package Package  @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  doctor  User?    @relation("DoctorSubscriptions", fields: [doctorId], references: [id], onDelete: SetNull)
+
+  @@index([patientId, status])
+  @@index([doctorId])
 }
 
 // ─── Blood Reports ────────────────────────────────────────────────────────────

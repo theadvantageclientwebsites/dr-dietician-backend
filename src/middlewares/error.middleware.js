@@ -30,6 +30,17 @@ module.exports = (err, req, res, next) => {
     "Appointment date must be in the future",
     "Doctor already has an appointment at this time. Please choose another slot.",
     "Invalid type. Use ONLINE or IN_PERSON",
+    "An active package is required to book an appointment",
+    "Your package is waiting for admin to assign a doctor",
+    "You can only book appointments with your assigned package doctor",
+    "Monthly appointment limit reached",
+    "You already have an active package",
+    "Invalid duration",
+    "duration is required for package purchase",
+    "doctorId is required",
+    "Cannot assign a doctor to a cancelled package",
+    "Cannot assign a doctor to an expired package",
+    "name, category, price3Months, price6Months and price12Months are required",
   ];
 
   if (badRequestMessages.some((msg) => message.includes(msg))) {

@@ -2,102 +2,124 @@ const crypto = require("crypto");
 const prisma = require("../../../lib/prisma");
 const razorpay = require("../../../lib/razorpay");
 const { razorpayKeyId, razorpayKeySecret } = require("../../../config/env");
+const {
+  DURATION_LABEL,
+  PURCHASABLE_DURATIONS,
+  getPackagePrice,
+} = require("../../../utils/package-duration");
+const { createSubscriptionFromOrder } = require("../subscriptions/subscriptions.service");
 
-// Duration label to months mapping
-const DURATION_LABEL = {
-  ONE_MONTH: "1 Month",
-  THREE_MONTHS: "3 Months",
-  SIX_MONTHS: "6 Months",
-};
-
-// Get price based on package duration
-const getPackagePrice = (pkg, duration) => {
-  switch (duration) {
-    case "ONE_MONTH": return pkg.price1Month;
-    case "THREE_MONTHS": return pkg.price3Months;
-    case "SIX_MONTHS": return pkg.price6Months;
-    default: throw new Error("Invalid duration. Use ONE_MONTH, THREE_MONTHS or SIX_MONTHS");
-  }
-};
-
-// ─── Create Razorpay Order ────────────────────────────────────────────────────
-
-const createOrder = async (patientId, data) => {
+const quotePurchase = async (patientId, data) => {
   const { itemType, itemId, duration } = data;
 
   if (!itemType || !itemId) {
     throw new Error("itemType and itemId are required");
   }
 
-  let amount = 0;
-  let itemName = "";
-
   if (itemType === "PACKAGE") {
-    if (!duration) throw new Error("duration is required for package purchase (ONE_MONTH, THREE_MONTHS, SIX_MONTHS)");
+    if (!duration) {
+      throw new Error("duration is required for package purchase (THREE_MONTHS, SIX_MONTHS, TWELVE_MONTHS)");
+    }
+    if (!PURCHASABLE_DURATIONS.includes(duration)) {
+      throw new Error("Invalid duration. Use THREE_MONTHS, SIX_MONTHS or TWELVE_MONTHS");
+    }
 
     const pkg = await prisma.package.findFirst({
       where: { id: itemId, isActive: true },
     });
-
     if (!pkg) throw new Error("Package not found or inactive");
 
-    amount = getPackagePrice(pkg, duration);
-    itemName = `${pkg.name} - ${DURATION_LABEL[duration]}`;
+    const active = await prisma.subscription.findFirst({
+      where: {
+        patientId,
+        status: { in: ["PENDING_ASSIGNMENT", "ACTIVE"] },
+        endsAt: { gt: new Date() },
+      },
+    });
+    if (active) {
+      throw new Error("You already have an active package. Wait until it expires before buying another.");
+    }
 
-  } else if (itemType === "DIGITAL_PRODUCT") {
+    return {
+      amount: getPackagePrice(pkg, duration),
+      itemName: `${pkg.name} - ${DURATION_LABEL[duration]}`,
+      duration,
+    };
+  }
+
+  if (itemType === "DIGITAL_PRODUCT") {
     const product = await prisma.digitalProduct.findFirst({
       where: { id: itemId, status: "PUBLISHED" },
     });
-
     if (!product) throw new Error("Digital product not found");
     if (product.isFree) throw new Error("This product is free, no payment required");
 
-    amount = product.price;
-    itemName = product.title;
-
-  } else {
-    throw new Error("Invalid itemType. Use PACKAGE or DIGITAL_PRODUCT");
+    return {
+      amount: product.price,
+      itemName: product.title,
+      duration: null,
+    };
   }
 
-  // Create Razorpay order (amount in paise — multiply by 100)
+  throw new Error("Invalid itemType. Use PACKAGE or DIGITAL_PRODUCT");
+};
+
+const fulfillPaidOrder = async (order) => {
+  if (order.itemType === "DIGITAL_PRODUCT") {
+    await prisma.digitalProduct.update({
+      where: { id: order.itemId },
+      data: { totalSales: { increment: 1 } },
+    });
+    return { subscription: null };
+  }
+
+  if (order.itemType === "PACKAGE") {
+    const subscription = await createSubscriptionFromOrder(order);
+    return { subscription };
+  }
+
+  return { subscription: null };
+};
+
+const createOrder = async (patientId, data) => {
+  const quote = await quotePurchase(patientId, data);
+
   const razorpayOrder = await razorpay.orders.create({
-    amount: Math.round(amount * 100), // paise
+    amount: Math.round(quote.amount * 100),
     currency: "INR",
     receipt: `order_${patientId}_${Date.now()}`,
     notes: {
       patientId,
-      itemType,
-      itemId,
-      itemName,
+      itemType: data.itemType,
+      itemId: data.itemId,
+      itemName: quote.itemName,
     },
   });
 
-  // Save pending order to DB
   const order = await prisma.order.create({
     data: {
       patientId,
-      itemType,
-      itemId,
-      itemName,
-      amount,
+      itemType: data.itemType,
+      itemId: data.itemId,
+      itemName: quote.itemName,
+      amount: quote.amount,
       currency: "INR",
-      duration: duration || null,
+      duration: quote.duration,
       status: "PENDING",
       razorpayOrderId: razorpayOrder.id,
     },
   });
 
   return {
-    orderId: razorpayOrder.id,       // Send to frontend for Razorpay popup
-    amount: razorpayOrder.amount,    // in paise
+    dummy: false,
+    orderId: razorpayOrder.id,
+    amount: razorpayOrder.amount,
     currency: razorpayOrder.currency,
-    keyId: razorpayKeyId,  // Frontend needs this to open popup
-    itemName,
+    keyId: razorpayKeyId,
+    itemName: quote.itemName,
     dbOrderId: order.id,
   };
 };
-
-// ─── Verify Payment ───────────────────────────────────────────────────────────
 
 const verifyPayment = async (patientId, data) => {
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = data;
@@ -106,7 +128,6 @@ const verifyPayment = async (patientId, data) => {
     throw new Error("razorpayOrderId, razorpayPaymentId and razorpaySignature are required");
   }
 
-  // Find the pending order
   const order = await prisma.order.findFirst({
     where: {
       razorpayOrderId,
@@ -117,14 +138,12 @@ const verifyPayment = async (patientId, data) => {
 
   if (!order) throw new Error("Order not found or already processed");
 
-  // Verify signature — HMAC SHA256
   const expectedSignature = crypto
     .createHmac("sha256", razorpayKeySecret)
     .update(`${razorpayOrderId}|${razorpayPaymentId}`)
     .digest("hex");
 
   if (expectedSignature !== razorpaySignature) {
-    // Mark order as failed
     await prisma.order.update({
       where: { id: order.id },
       data: { status: "FAILED" },
@@ -132,7 +151,6 @@ const verifyPayment = async (patientId, data) => {
     throw new Error("Payment verification failed. Invalid signature.");
   }
 
-  // Mark order as PAID
   const updatedOrder = await prisma.order.update({
     where: { id: order.id },
     data: {
@@ -143,26 +161,60 @@ const verifyPayment = async (patientId, data) => {
     },
   });
 
-  // If digital product — increment totalSales
-  if (order.itemType === "DIGITAL_PRODUCT") {
-    await prisma.digitalProduct.update({
-      where: { id: order.itemId },
-      data: { totalSales: { increment: 1 } },
-    });
-  }
+  const { subscription } = await fulfillPaidOrder(updatedOrder);
 
   return {
     success: true,
+    dummy: false,
     orderId: updatedOrder.id,
     itemType: updatedOrder.itemType,
     itemName: updatedOrder.itemName,
     amount: updatedOrder.amount,
     paidAt: updatedOrder.paidAt,
-    message: "Payment successful! You now have access to your purchase.",
+    subscription: subscription || null,
+    message: subscription
+      ? "Payment successful. Admin will assign a doctor to your package."
+      : "Payment successful! You now have access to your purchase.",
   };
 };
 
-// ─── My Orders ────────────────────────────────────────────────────────────────
+const dummyCheckout = async (patientId, data) => {
+  const quote = await quotePurchase(patientId, data);
+  const stamp = Date.now();
+
+  const order = await prisma.order.create({
+    data: {
+      patientId,
+      itemType: data.itemType,
+      itemId: data.itemId,
+      itemName: quote.itemName,
+      amount: quote.amount,
+      currency: "INR",
+      duration: quote.duration,
+      status: "PAID",
+      isDummy: true,
+      razorpayOrderId: `dummy_order_${stamp}`,
+      razorpayPaymentId: `dummy_pay_${stamp}`,
+      paidAt: new Date(),
+    },
+  });
+
+  const { subscription } = await fulfillPaidOrder(order);
+
+  return {
+    dummy: true,
+    orderId: order.id,
+    itemType: order.itemType,
+    itemName: order.itemName,
+    amount: order.amount,
+    currency: order.currency,
+    paidAt: order.paidAt,
+    subscription: subscription || null,
+    message: subscription
+      ? "Dummy payment successful. Package is waiting for admin to assign a doctor."
+      : "Dummy payment successful. Product unlocked.",
+  };
+};
 
 const getMyOrders = async (patientId, query) => {
   const page = Number(query.page) || 1;
@@ -190,6 +242,7 @@ const getMyOrders = async (patientId, query) => {
       currency: true,
       duration: true,
       status: true,
+      isDummy: true,
       razorpayOrderId: true,
       razorpayPaymentId: true,
       paidAt: true,
@@ -208,8 +261,6 @@ const getMyOrders = async (patientId, query) => {
   };
 };
 
-// ─── Check if patient has purchased an item ───────────────────────────────────
-
 const hasPurchased = async (patientId, itemType, itemId) => {
   const order = await prisma.order.findFirst({
     where: {
@@ -225,6 +276,7 @@ const hasPurchased = async (patientId, itemType, itemId) => {
 module.exports = {
   createOrder,
   verifyPayment,
+  dummyCheckout,
   getMyOrders,
   hasPurchased,
 };

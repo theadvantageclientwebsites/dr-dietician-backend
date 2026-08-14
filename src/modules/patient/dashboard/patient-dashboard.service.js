@@ -1,14 +1,12 @@
 const prisma = require("../../../lib/prisma");
-const {
-  withRescheduleInfo,
-  patientAppointmentSelect,
-} = require("../appointments/patient-appointments.service");
+const { withRescheduleInfo, patientAppointmentSelect } = require("../appointments/patient-appointments.service");
+const { withMeetingUsage } = require("../subscriptions/subscriptions.service");
 
 const getPatientDashboard = async (patientId) => {
   const today = new Date();
 
   // Run all queries in parallel for performance
-  const [patient, upcomingAppointment, totalAppointments, activePackagesCount, digitalProductsCount] =
+  const [patient, upcomingAppointment, totalAppointments, activePackagesCount, digitalProductsCount, activeSubscription] =
     await Promise.all([
       // 1. Patient profile + vitals
       prisma.user.findUnique({
@@ -68,6 +66,33 @@ const getPatientDashboard = async (patientId) => {
       // 5. Published digital products count
       prisma.digitalProduct.count({
         where: { status: "PUBLISHED" },
+      }),
+
+      prisma.subscription.findFirst({
+        where: {
+          patientId,
+          status: { in: ["PENDING_ASSIGNMENT", "ACTIVE"] },
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          patientId: true,
+          status: true,
+          duration: true,
+          meetingsPerMonth: true,
+          startsAt: true,
+          endsAt: true,
+          assignedAt: true,
+          package: { select: { id: true, name: true, category: true } },
+          doctor: {
+            select: {
+              id: true,
+              fullName: true,
+              profilePhotoUrl: true,
+              doctorProfile: { select: { specialization: true, hospitalName: true } },
+            },
+          },
+        },
       }),
     ]);
 
@@ -148,6 +173,7 @@ const getPatientDashboard = async (patientId) => {
       availablePackages: activePackagesCount,
       availableDigitalProducts: digitalProductsCount,
     },
+    activePackage: activeSubscription ? await withMeetingUsage(activeSubscription) : null,
     // Placeholders for future features
     dietPlan: null,       // Will be added when DietPlan schema is built
     recentActivity: [],   // Will be added when Activity schema is built

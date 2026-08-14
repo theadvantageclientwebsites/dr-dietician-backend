@@ -5,13 +5,21 @@ const getMyPatients = async (doctorId, query) => {
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  // Get unique patients who had appointments with this doctor
-  const patientGroups = await prisma.appointment.groupBy({
-    by: ["patientId"],
-    where: { doctorId },
-  });
+  const [appointmentGroups, assignedSubs] = await Promise.all([
+    prisma.appointment.groupBy({
+      by: ["patientId"],
+      where: { doctorId },
+    }),
+    prisma.subscription.findMany({
+      where: { doctorId, status: { in: ["PENDING_ASSIGNMENT", "ACTIVE"] } },
+      select: { patientId: true },
+    }),
+  ]);
 
-  const patientIds = patientGroups.map((g) => g.patientId);
+  const patientIds = [...new Set([
+    ...appointmentGroups.map((g) => g.patientId),
+    ...assignedSubs.map((s) => s.patientId),
+  ])];
 
   if (patientIds.length === 0) {
     return {
@@ -58,12 +66,29 @@ const getMyPatients = async (doctorId, query) => {
   // Attach last appointment info to each patient
   const itemsWithLastAppointment = await Promise.all(
     items.map(async (patient) => {
-      const lastAppointment = await prisma.appointment.findFirst({
-        where: { doctorId, patientId: patient.id },
-        orderBy: { dateTime: "desc" },
-        select: { id: true, dateTime: true, status: true, type: true },
-      });
-      return { ...patient, lastAppointment };
+      const [lastAppointment, packageSubscription] = await Promise.all([
+        prisma.appointment.findFirst({
+          where: { doctorId, patientId: patient.id },
+          orderBy: { dateTime: "desc" },
+          select: { id: true, dateTime: true, status: true, type: true },
+        }),
+        prisma.subscription.findFirst({
+          where: {
+            doctorId,
+            patientId: patient.id,
+            status: { in: ["PENDING_ASSIGNMENT", "ACTIVE"] },
+          },
+          orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            status: true,
+            duration: true,
+            endsAt: true,
+            package: { select: { id: true, name: true, category: true } },
+          },
+        }),
+      ]);
+      return { ...patient, lastAppointment, packageSubscription };
     })
   );
 
@@ -78,8 +103,11 @@ const getPatientById = async (doctorId, patientId) => {
   const hasAppointment = await prisma.appointment.findFirst({
     where: { doctorId, patientId },
   });
+  const hasPackage = await prisma.subscription.findFirst({
+    where: { doctorId, patientId, status: { in: ["PENDING_ASSIGNMENT", "ACTIVE"] } },
+  });
 
-  if (!hasAppointment) throw new Error("Patient not found or not associated with you");
+  if (!hasAppointment && !hasPackage) throw new Error("Patient not found or not associated with you");
 
   const patient = await prisma.user.findUnique({
     where: { id: patientId },
@@ -121,7 +149,28 @@ const getPatientById = async (doctorId, patientId) => {
     },
   });
 
-  return { ...patient, appointmentHistory };
+  const packageSubscription = await prisma.subscription.findFirst({
+    where: {
+      doctorId,
+      patientId,
+      status: { in: ["PENDING_ASSIGNMENT", "ACTIVE"] },
+    },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      status: true,
+      duration: true,
+      meetingsPerMonth: true,
+      startsAt: true,
+      endsAt: true,
+      assignedAt: true,
+      package: {
+        select: { id: true, name: true, category: true, features: true },
+      },
+    },
+  });
+
+  return { ...patient, appointmentHistory, packageSubscription };
 };
 
 module.exports = { getMyPatients, getPatientById };

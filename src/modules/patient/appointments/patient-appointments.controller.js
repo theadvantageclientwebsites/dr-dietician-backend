@@ -62,7 +62,8 @@ const cancelAppointment = async (req, res, next) => {
 
 const getAvailableDoctors = async (req, res, next) => {
   try {
-    const data = await patientAppointmentsService.getAvailableDoctors(req.query);
+    const patientId = req.user.userId || req.user.id;
+    const data = await patientAppointmentsService.getAvailableDoctors(patientId, req.query);
 
     res.status(200).json({
       success: true,

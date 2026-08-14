@@ -5,15 +5,15 @@ const createPackage = async (data) => {
     name,
     category,
     description,
-    price1Month,
     price3Months,
     price6Months,
+    price12Months,
     features,
     isActive,
   } = data;
 
-  if (!name || !category || price1Month === undefined || price3Months === undefined || price6Months === undefined) {
-    throw new Error("name, category, price1Month, price3Months and price6Months are required");
+  if (!name || !category || price3Months === undefined || price6Months === undefined || price12Months === undefined) {
+    throw new Error("name, category, price3Months, price6Months and price12Months are required");
   }
 
   const newPackage = await prisma.package.create({
@@ -21,9 +21,9 @@ const createPackage = async (data) => {
       name,
       category,
       description: description || null,
-      price1Month: Number(price1Month),
       price3Months: Number(price3Months),
       price6Months: Number(price6Months),
+      price12Months: Number(price12Months),
       features: features || [],
       isActive: isActive !== undefined ? Boolean(isActive) : true,
     },
@@ -122,9 +122,9 @@ const updatePackage = async (packageId, data) => {
   if (data.name !== undefined) updateData.name = data.name;
   if (data.category !== undefined) updateData.category = data.category;
   if (data.description !== undefined) updateData.description = data.description;
-  if (data.price1Month !== undefined) updateData.price1Month = Number(data.price1Month);
   if (data.price3Months !== undefined) updateData.price3Months = Number(data.price3Months);
   if (data.price6Months !== undefined) updateData.price6Months = Number(data.price6Months);
+  if (data.price12Months !== undefined) updateData.price12Months = Number(data.price12Months);
   if (data.features !== undefined) updateData.features = data.features;
   if (data.isActive !== undefined) updateData.isActive = Boolean(data.isActive);
 

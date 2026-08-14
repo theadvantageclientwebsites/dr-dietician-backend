@@ -455,14 +455,14 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [name, category, price1Month, price3Months, price6Months]
+ *             required: [name, category, price3Months, price6Months, price12Months]
  *             properties:
  *               name: { type: string, example: "Thyroid Management" }
  *               category: { type: string, example: "Thyroid" }
  *               description: { type: string }
- *               price1Month: { type: number, example: 1299 }
  *               price3Months: { type: number, example: 5499 }
  *               price6Months: { type: number, example: 9999 }
+ *               price12Months: { type: number, example: 17999 }
  *               features: { type: array, items: { type: string } }
  *               isActive: { type: boolean, example: true }
  *     responses:
@@ -506,6 +506,47 @@
  *     responses:
  *       200:
  *         description: Status toggled
+ *
+ * /admin/subscriptions:
+ *   get:
+ *     tags: [Admin - Subscriptions]
+ *     summary: List package subscriptions
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [PENDING_ASSIGNMENT, ACTIVE, EXPIRED, CANCELLED] }
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Paginated subscriptions
+ *
+ * /admin/subscriptions/{id}/assign-doctor:
+ *   patch:
+ *     tags: [Admin - Subscriptions]
+ *     summary: Assign a doctor to a purchased package
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [doctorId]
+ *             properties:
+ *               doctorId: { type: string }
+ *     responses:
+ *       200:
+ *         description: Doctor assigned, subscription becomes ACTIVE
  *
  * /admin/digital-products:
  *   post:

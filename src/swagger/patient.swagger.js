@@ -249,9 +249,9 @@
  *                 description: ID of the package or digital product
  *               duration:
  *                 type: string
- *                 enum: [ONE_MONTH, THREE_MONTHS, SIX_MONTHS]
+ *                 enum: [THREE_MONTHS, SIX_MONTHS, TWELVE_MONTHS]
  *                 description: Required only for PACKAGE
- *                 example: ONE_MONTH
+ *                 example: THREE_MONTHS
  *     responses:
  *       201:
  *         description: Razorpay order created
@@ -302,6 +302,51 @@
  *     responses:
  *       200:
  *         description: My orders list
+ *
+ * /patient/payments/dummy-checkout:
+ *   post:
+ *     tags: [Patient - Payments]
+ *     summary: Dummy checkout (use this while Razorpay is not working)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [itemType, itemId]
+ *             properties:
+ *               itemType:
+ *                 type: string
+ *                 enum: [PACKAGE, DIGITAL_PRODUCT]
+ *               itemId: { type: string }
+ *               duration:
+ *                 type: string
+ *                 enum: [THREE_MONTHS, SIX_MONTHS, TWELVE_MONTHS]
+ *     responses:
+ *       201:
+ *         description: Order marked PAID without Razorpay. Package subscriptions wait for admin doctor assignment.
+ *
+ * /patient/subscriptions/active:
+ *   get:
+ *     tags: [Patient - Packages]
+ *     summary: Get my current package subscription
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Active or pending-assignment subscription, or data null
+ *
+ * /patient/subscriptions:
+ *   get:
+ *     tags: [Patient - Packages]
+ *     summary: Get my package purchase history
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Paginated subscriptions
  *
  * /intern/courses:
  *   get:

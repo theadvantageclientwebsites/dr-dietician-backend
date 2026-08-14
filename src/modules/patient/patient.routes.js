@@ -12,7 +12,8 @@ const {
 } = require("./appointments/patient-appointments.controller");
 const { getPackages, getPackageById } = require("./packages/patient-packages.controller");
 const { getDigitalProducts, getDigitalProductById } = require("./digital-products/patient-digital-products.controller");
-const { createOrder, verifyPayment, getMyOrders } = require("./payments/payments.controller");
+const { createOrder, verifyPayment, dummyCheckout, getMyOrders } = require("./payments/payments.controller");
+const { getMySubscriptions, getActiveSubscription } = require("./subscriptions/subscriptions.controller");
 const { getPatientBloodReports } = require("../doctor/blood-reports/blood-reports.service");
 
 const router = express.Router();
@@ -35,6 +36,10 @@ router.patch("/appointments/:id/cancel", authMiddleware, patientMiddleware, canc
 router.get("/packages", authMiddleware, patientMiddleware, getPackages);
 router.get("/packages/:id", authMiddleware, patientMiddleware, getPackageById);
 
+// ─── My subscriptions ─────────────────────────────────────────────────────────
+router.get("/subscriptions/active", authMiddleware, patientMiddleware, getActiveSubscription);
+router.get("/subscriptions", authMiddleware, patientMiddleware, getMySubscriptions);
+
 // ─── Digital Products ─────────────────────────────────────────────────────────
 router.get("/digital-products", authMiddleware, patientMiddleware, getDigitalProducts);
 router.get("/digital-products/:id", authMiddleware, patientMiddleware, getDigitalProductById);
@@ -42,6 +47,7 @@ router.get("/digital-products/:id", authMiddleware, patientMiddleware, getDigita
 // ─── Payments ─────────────────────────────────────────────────────────────────
 router.post("/payments/create-order", authMiddleware, patientMiddleware, createOrder);
 router.post("/payments/verify", authMiddleware, patientMiddleware, verifyPayment);
+router.post("/payments/dummy-checkout", authMiddleware, patientMiddleware, dummyCheckout);
 router.get("/payments/my-orders", authMiddleware, patientMiddleware, getMyOrders);
 
 // ─── Blood Reports ────────────────────────────────────────────────────────────

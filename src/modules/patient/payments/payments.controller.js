@@ -45,8 +45,24 @@ const getMyOrders = async (req, res, next) => {
   }
 };
 
+const dummyCheckout = async (req, res, next) => {
+  try {
+    const patientId = req.user.userId || req.user.id;
+    const data = await paymentsService.dummyCheckout(patientId, req.body);
+
+    res.status(201).json({
+      success: true,
+      message: data.message,
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createOrder,
   verifyPayment,
+  dummyCheckout,
   getMyOrders,
 };
