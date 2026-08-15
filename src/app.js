@@ -11,7 +11,11 @@ const errorHandler = require("./middlewares/error.middleware");
 
 const app = express();
 
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  // Frontend (Vite/Vercel) is a different origin; without this, <img> tags for /uploads are blocked.
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+}));
 app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
