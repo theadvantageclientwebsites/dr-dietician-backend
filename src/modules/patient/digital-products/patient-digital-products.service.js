@@ -1,6 +1,18 @@
 const prisma = require("../../../lib/prisma");
+const { catalogSelect, getProductAccess, getTwelveMonthFreebieIds } = require("./product-access");
 
-const getDigitalProducts = async (query) => {
+const withAccessFlags = async (patientId, product) => {
+  const access = await getProductAccess(patientId, product);
+  return {
+    ...product,
+    fileUrl: access.hasAccess ? product.fileUrl || null : null,
+    previewUrl: product.previewUrl || null,
+    hasAccess: access.hasAccess,
+    accessType: access.accessType,
+  };
+};
+
+const getDigitalProducts = async (patientId, query) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
@@ -40,22 +52,90 @@ const getDigitalProducts = async (query) => {
     skip,
     take: limit,
     orderBy: { createdAt: "desc" },
-    // Don't expose fileUrl in browse list — only in single view after purchase
-    select: {
-      id: true,
-      title: true,
-      category: true,
-      price: true,
-      description: true,
-      thumbnailUrl: true,
-      author: true,
-      pageCount: true,
-      language: true,
-      isFree: true,
-      totalSales: true,
-      createdAt: true,
-    },
+    select: catalogSelect,
   });
+
+  const withFlags = await Promise.all(items.map((item) => withAccessFlags(patientId, item)));
+
+  return {
+    items: withFlags,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+    },
+  };
+};
+
+const getDigitalProductById = async (patientId, productId) => {
+  const product = await prisma.digitalProduct.findFirst({
+    where: { id: productId, status: "PUBLISHED" },
+    select: { ...catalogSelect, fileUrl: true },
+  });
+
+  if (!product) throw new Error("Product not found");
+
+  return withAccessFlags(patientId, product);
+};
+
+const getMyLibrary = async (patientId, query) => {
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  const [orders, freebieIds] = await Promise.all([
+    prisma.order.findMany({
+      where: {
+        patientId,
+        itemType: "DIGITAL_PRODUCT",
+        status: "PAID",
+      },
+      select: { itemId: true, paidAt: true, createdAt: true },
+      orderBy: { paidAt: "desc" },
+    }),
+    getTwelveMonthFreebieIds(patientId),
+  ]);
+
+  const purchasedIds = [...new Set(orders.map((order) => order.itemId))];
+  const libraryIds = [...new Set([...purchasedIds, ...freebieIds])];
+
+  if (libraryIds.length === 0) {
+    return {
+      items: [],
+      pagination: { page, limit, totalItems: 0, totalPages: 0 },
+    };
+  }
+
+  const totalItems = libraryIds.length;
+  const pageIds = libraryIds.slice(skip, skip + limit);
+
+  const products = await prisma.digitalProduct.findMany({
+    where: { id: { in: pageIds }, status: "PUBLISHED" },
+    select: { ...catalogSelect, fileUrl: true },
+  });
+
+  const byId = Object.fromEntries(products.map((product) => [product.id, product]));
+  const purchasedSet = new Set(purchasedIds);
+  const freebieSet = new Set(freebieIds);
+
+  const items = pageIds
+    .map((id) => byId[id])
+    .filter(Boolean)
+    .map((product) => {
+      const accessType = purchasedSet.has(product.id)
+        ? "PURCHASED"
+        : freebieSet.has(product.id)
+          ? "PACKAGE_FREEBIE"
+          : product.isFree
+            ? "FREE"
+            : "PURCHASED";
+      return {
+        ...product,
+        hasAccess: true,
+        accessType,
+      };
+    });
 
   return {
     items,
@@ -68,36 +148,9 @@ const getDigitalProducts = async (query) => {
   };
 };
 
-const getDigitalProductById = async (productId) => {
-  const product = await prisma.digitalProduct.findFirst({
-    where: {
-      id: productId,
-      status: "PUBLISHED",
-    },
-    // fileUrl available in detail view (will be gated by purchase later)
-    select: {
-      id: true,
-      title: true,
-      category: true,
-      price: true,
-      description: true,
-      thumbnailUrl: true,
-      fileUrl: true,
-      author: true,
-      pageCount: true,
-      language: true,
-      isFree: true,
-      totalSales: true,
-      createdAt: true,
-    },
-  });
-
-  if (!product) throw new Error("Product not found");
-
-  return product;
-};
-
 module.exports = {
   getDigitalProducts,
   getDigitalProductById,
+  getMyLibrary,
+  getProductAccess,
 };

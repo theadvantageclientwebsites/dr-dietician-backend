@@ -2,7 +2,8 @@ const patientDigitalProductsService = require("./patient-digital-products.servic
 
 const getDigitalProducts = async (req, res, next) => {
   try {
-    const data = await patientDigitalProductsService.getDigitalProducts(req.query);
+    const patientId = req.user.userId || req.user.id;
+    const data = await patientDigitalProductsService.getDigitalProducts(patientId, req.query);
 
     res.status(200).json({
       success: true,
@@ -16,7 +17,8 @@ const getDigitalProducts = async (req, res, next) => {
 
 const getDigitalProductById = async (req, res, next) => {
   try {
-    const data = await patientDigitalProductsService.getDigitalProductById(req.params.id);
+    const patientId = req.user.userId || req.user.id;
+    const data = await patientDigitalProductsService.getDigitalProductById(patientId, req.params.id);
 
     res.status(200).json({
       success: true,
@@ -28,7 +30,23 @@ const getDigitalProductById = async (req, res, next) => {
   }
 };
 
+const getMyLibrary = async (req, res, next) => {
+  try {
+    const patientId = req.user.userId || req.user.id;
+    const data = await patientDigitalProductsService.getMyLibrary(patientId, req.query);
+
+    res.status(200).json({
+      success: true,
+      message: "Library fetched successfully",
+      data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDigitalProducts,
   getDigitalProductById,
+  getMyLibrary,
 };

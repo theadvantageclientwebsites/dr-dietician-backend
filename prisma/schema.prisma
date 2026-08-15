@@ -116,6 +116,7 @@ model DigitalProduct {
   price        Float                @default(0)
   description  String?
   fileUrl      String?
+  previewUrl   String?
   thumbnailUrl String?
   author       String?
   pageCount    Int?
@@ -124,6 +125,8 @@ model DigitalProduct {
   totalSales   Int                  @default(0)
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @updatedAt
+
+  twelveMonthPackages Package[] @relation("PackageTwelveMonthFreebies")
 }
 
 model Package {
@@ -140,6 +143,7 @@ model Package {
   updatedAt      DateTime @updatedAt
 
   subscriptions  Subscription[]
+  freebies       DigitalProduct[] @relation("PackageTwelveMonthFreebies")
 }
 
 model PatientProfile {

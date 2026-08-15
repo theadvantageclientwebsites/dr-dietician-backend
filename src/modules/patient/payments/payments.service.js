@@ -8,6 +8,7 @@ const {
   getPackagePrice,
 } = require("../../../utils/package-duration");
 const { createSubscriptionFromOrder } = require("../subscriptions/subscriptions.service");
+const { getProductAccess } = require("../digital-products/product-access");
 
 const quotePurchase = async (patientId, data) => {
   const { itemType, itemId, duration } = data;
@@ -53,6 +54,11 @@ const quotePurchase = async (patientId, data) => {
     });
     if (!product) throw new Error("Digital product not found");
     if (product.isFree) throw new Error("This product is free, no payment required");
+
+    const access = await getProductAccess(patientId, product);
+    if (access.hasAccess) {
+      throw new Error("You already have access to this product");
+    }
 
     return {
       amount: product.price,

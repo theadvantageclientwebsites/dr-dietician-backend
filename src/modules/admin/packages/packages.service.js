@@ -1,5 +1,28 @@
 const prisma = require("../../../lib/prisma");
 
+const freebieSelect = {
+  id: true,
+  title: true,
+  category: true,
+  thumbnailUrl: true,
+  previewUrl: true,
+  author: true,
+  isFree: true,
+  price: true,
+};
+
+const connectFreebies = async (freebieProductIds) => {
+  if (!Array.isArray(freebieProductIds)) return undefined;
+  const ids = [...new Set(freebieProductIds.filter(Boolean))];
+  if (ids.length === 0) return { set: [] };
+
+  const count = await prisma.digitalProduct.count({ where: { id: { in: ids } } });
+  if (count !== ids.length) {
+    throw new Error("One or more freebie digital products were not found");
+  }
+  return { set: ids.map((id) => ({ id })) };
+};
+
 const createPackage = async (data) => {
   const {
     name,
@@ -10,11 +33,14 @@ const createPackage = async (data) => {
     price12Months,
     features,
     isActive,
+    freebieProductIds,
   } = data;
 
   if (!name || !category || price3Months === undefined || price6Months === undefined || price12Months === undefined) {
     throw new Error("name, category, price3Months, price6Months and price12Months are required");
   }
+
+  const freebies = await connectFreebies(freebieProductIds);
 
   const newPackage = await prisma.package.create({
     data: {
@@ -26,7 +52,9 @@ const createPackage = async (data) => {
       price12Months: Number(price12Months),
       features: features || [],
       isActive: isActive !== undefined ? Boolean(isActive) : true,
+      ...(freebies ? { freebies } : {}),
     },
+    include: { freebies: { select: freebieSelect } },
   });
 
   return newPackage;
@@ -79,6 +107,7 @@ const getPackages = async (query) => {
     orderBy: {
       createdAt: "desc",
     },
+    include: { freebies: { select: freebieSelect } },
   });
 
   return {
@@ -100,6 +129,7 @@ const getPackages = async (query) => {
 const getPackageById = async (packageId) => {
   const pkg = await prisma.package.findUnique({
     where: { id: packageId },
+    include: { freebies: { select: freebieSelect } },
   });
 
   if (!pkg) {
@@ -127,10 +157,14 @@ const updatePackage = async (packageId, data) => {
   if (data.price12Months !== undefined) updateData.price12Months = Number(data.price12Months);
   if (data.features !== undefined) updateData.features = data.features;
   if (data.isActive !== undefined) updateData.isActive = Boolean(data.isActive);
+  if (data.freebieProductIds !== undefined) {
+    updateData.freebies = await connectFreebies(data.freebieProductIds);
+  }
 
   const updated = await prisma.package.update({
     where: { id: packageId },
     data: updateData,
+    include: { freebies: { select: freebieSelect } },
   });
 
   return updated;

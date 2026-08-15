@@ -2,6 +2,7 @@ const prisma = require("../../../lib/prisma");
 const { withRescheduleInfo, patientAppointmentSelect } = require("../appointments/patient-appointments.service");
 const { withMeetingUsage } = require("../subscriptions/subscriptions.service");
 const { getMyDietPlan } = require("../diet-plans/diet-plans.service");
+const { getMyLibrary } = require("../digital-products/patient-digital-products.service");
 
 const getPatientDashboard = async (patientId) => {
   const today = new Date();
@@ -177,6 +178,7 @@ const getPatientDashboard = async (patientId) => {
     },
     activePackage: activeSubscription ? await withMeetingUsage(activeSubscription) : null,
     dietPlan: await getMyDietPlan(patientId),
+    library: await getMyLibrary(patientId, { page: 1, limit: 4 }),
     recentActivity: [],
   };
 };

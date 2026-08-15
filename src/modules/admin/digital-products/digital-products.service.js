@@ -1,4 +1,5 @@
 const prisma = require("../../../lib/prisma");
+const { generatePdfPreview } = require("../../../utils/pdf-preview");
 
 const createDigitalProduct = async (data) => {
   const {
@@ -19,6 +20,8 @@ const createDigitalProduct = async (data) => {
     throw new Error("title and category are required");
   }
 
+  const previewUrl = fileUrl ? await generatePdfPreview(fileUrl) : null;
+
   const product = await prisma.digitalProduct.create({
     data: {
       title,
@@ -27,6 +30,7 @@ const createDigitalProduct = async (data) => {
       price: isFree ? 0 : Number(price) || 0,
       description: description || null,
       fileUrl: fileUrl || null,
+      previewUrl,
       thumbnailUrl: thumbnailUrl || null,
       author: author || null,
       pageCount: pageCount ? Number(pageCount) : null,
@@ -155,7 +159,10 @@ const updateDigitalProduct = async (productId, data) => {
   if (data.status !== undefined) updateData.status = data.status.toUpperCase();
   if (data.price !== undefined) updateData.price = Number(data.price);
   if (data.description !== undefined) updateData.description = data.description;
-  if (data.fileUrl !== undefined) updateData.fileUrl = data.fileUrl;
+  if (data.fileUrl !== undefined) {
+    updateData.fileUrl = data.fileUrl;
+    updateData.previewUrl = data.fileUrl ? await generatePdfPreview(data.fileUrl) : null;
+  }
   if (data.thumbnailUrl !== undefined) updateData.thumbnailUrl = data.thumbnailUrl;
   if (data.author !== undefined) updateData.author = data.author;
   if (data.pageCount !== undefined) updateData.pageCount = Number(data.pageCount);

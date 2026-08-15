@@ -11,7 +11,7 @@ const {
   getAvailableDoctors,
 } = require("./appointments/patient-appointments.controller");
 const { getPackages, getPackageById } = require("./packages/patient-packages.controller");
-const { getDigitalProducts, getDigitalProductById } = require("./digital-products/patient-digital-products.controller");
+const { getDigitalProducts, getDigitalProductById, getMyLibrary } = require("./digital-products/patient-digital-products.controller");
 const { createOrder, verifyPayment, dummyCheckout, getMyOrders } = require("./payments/payments.controller");
 const { getMySubscriptions, getActiveSubscription } = require("./subscriptions/subscriptions.controller");
 const { getMyDietPlan } = require("./diet-plans/diet-plans.controller");
@@ -45,6 +45,7 @@ router.get("/subscriptions", authMiddleware, patientMiddleware, getMySubscriptio
 router.get("/diet-plan", authMiddleware, patientMiddleware, getMyDietPlan);
 
 // ─── Digital Products ─────────────────────────────────────────────────────────
+router.get("/library", authMiddleware, patientMiddleware, getMyLibrary);
 router.get("/digital-products", authMiddleware, patientMiddleware, getDigitalProducts);
 router.get("/digital-products/:id", authMiddleware, patientMiddleware, getDigitalProductById);
 

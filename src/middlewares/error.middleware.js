@@ -50,6 +50,8 @@ module.exports = (err, req, res, next) => {
     "Add at least breakfast, lunch or dinner before submitting",
     "Only plans waiting for approval can be approved",
     "Only plans waiting for approval can be rejected",
+    "You already have access to this product",
+    "One or more freebie digital products were not found",
   ];
 
   if (badRequestMessages.some((msg) => message.includes(msg))) {

@@ -224,7 +224,17 @@
  *         schema: { type: number }
  *     responses:
  *       200:
- *         description: List of digital products (fileUrl hidden)
+ *         description: List of digital products (fileUrl only if hasAccess; previewUrl is first 2 pages)
+ *
+ * /patient/library:
+ *   get:
+ *     tags: [Patient - Digital Products]
+ *     summary: My library (purchased products + 12-month package freebies)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Products the patient can download in full
  *
  * /patient/payments/create-order:
  *   post:

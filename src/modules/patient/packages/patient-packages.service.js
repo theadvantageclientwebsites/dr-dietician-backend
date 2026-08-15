@@ -18,6 +18,19 @@ const getPackages = async (query) => {
   const packages = await prisma.package.findMany({
     where,
     orderBy: { createdAt: "desc" },
+    include: {
+      freebies: {
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          thumbnailUrl: true,
+          previewUrl: true,
+          author: true,
+          price: true,
+        },
+      },
+    },
   });
 
   return packages;
@@ -28,6 +41,19 @@ const getPackageById = async (packageId) => {
     where: {
       id: packageId,
       isActive: true,
+    },
+    include: {
+      freebies: {
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          thumbnailUrl: true,
+          previewUrl: true,
+          author: true,
+          price: true,
+        },
+      },
     },
   });
 

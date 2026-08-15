@@ -1,4 +1,5 @@
 const uploadService = require("./upload.service");
+const { generatePdfPreview } = require("../../utils/pdf-preview");
 
 const uploadProfilePhoto = async (req, res, next) => {
   try {
@@ -58,12 +59,14 @@ const uploadDigitalProductFile = async (req, res, next) => {
     }
 
     const filePath = `/uploads/digital-products/files/${req.file.filename}`;
+    const previewUrl = await generatePdfPreview(filePath);
 
     return res.status(200).json({
       success: true,
       message: "Digital product file uploaded successfully",
       data: {
         fileUrl: filePath,
+        previewUrl,
         originalName: req.file.originalname,
         size: req.file.size,
       },
