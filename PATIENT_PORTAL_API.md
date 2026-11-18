@@ -1,90 +1,65 @@
-# Patient Portal API
+# Patient Portal — Frontend API Reference
 
-## Base URL
-
-```text
-https://dr-dietician-backend.onrender.com/api
-```
-
-Local development:
-
-```text
-http://localhost:5000/api
-```
+> **Base URL (Production):** `https://dr-dietician-backend.onrender.com/api`
+> **Base URL (Local):** `http://localhost:5000/api`
+> **Swagger UI:** `/api/docs`
 
 ## Authentication
 
-All patient endpoints require patient authentication.
-
 ```http
-Authorization: Bearer <patient_token>
-Content-Type: application/json
-```
-
-Get your token by logging in:
-
-```http
-POST /api/auth/login
+POST /auth/login
 { "email": "patient@example.com", "password": "12345678" }
 ```
 
-## Related Docs
-
-- **Appointments** (booking, cancel, doctor reschedule): [`APPOINTMENTS_API.md`](./APPOINTMENTS_API.md)
-- **Packages + dummy payment (frontend)**: [`FRONTEND_PACKAGES_UPDATE.md`](./FRONTEND_PACKAGES_UPDATE.md)
-- **Diet plans (frontend)**: [`FRONTEND_DIET_PLAN.md`](./FRONTEND_DIET_PLAN.md)
-- **Digital products (library + preview)**: [`FRONTEND_DIGITAL_PRODUCTS.md`](./FRONTEND_DIGITAL_PRODUCTS.md)
-- **Services (1:1 consult + lab analysis)**: [`FRONTEND_SERVICES.md`](./FRONTEND_SERVICES.md)
-- **Payments** (Razorpay): [`PAYMENTS_AND_REVENUE_API.md`](./PAYMENTS_AND_REVENUE_API.md)
+All patient requests need:
+```
+Authorization: Bearer <token>
+Content-Type: application/json
+```
 
 ---
 
-## Endpoints Overview
+## Quick Reference — All Patient Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/patient/dashboard` | Home dashboard |
-| `GET` | `/patient/profile` | Get my profile |
-| `PUT` | `/patient/profile` | Update my profile |
-| `POST` | `/upload/profile-photo` | Update profile photo |
-| `GET` | `/patient/appointments/doctors` | Browse doctors for booking |
-| `GET` | `/patient/appointments` | My appointments |
-| `POST` | `/patient/appointments` | Book appointment |
-| `GET` | `/patient/appointments/:id` | Single appointment detail |
-| `PATCH` | `/patient/appointments/:id/cancel` | Cancel appointment |
-| `GET` | `/patient/packages` | Browse packages |
-| `GET` | `/patient/packages/:id` | Package detail |
-| `GET` | `/patient/digital-products` | Browse digital products |
-| `GET` | `/patient/digital-products/:id` | Digital product detail |
-| `GET` | `/patient/services` | Browse one-time services |
-| `GET` | `/patient/service-bookings` | My paid service bookings |
-| `POST` | `/patient/payments/create-order` | Create Razorpay order |
-| `POST` | `/patient/payments/verify` | Verify payment after success |
-| `GET` | `/patient/payments/my-orders` | My purchase history |
-| `GET` | `/patient/blood-reports` | My blood reports (uploaded by doctors) |
+| GET | `/patient/dashboard` | Home dashboard |
+| GET | `/patient/profile` | My profile |
+| PUT | `/patient/profile` | Update profile |
+| POST | `/upload/profile-photo` | Upload profile photo |
+| GET | `/patient/appointments/doctors` | Browse available doctors |
+| GET | `/patient/appointments` | My appointments |
+| POST | `/patient/appointments` | Book appointment |
+| GET | `/patient/appointments/:id` | Single appointment detail |
+| PATCH | `/patient/appointments/:id/cancel` | Cancel appointment |
+| GET | `/patient/packages` | Browse packages |
+| GET | `/patient/packages/:id` | Package detail |
+| GET | `/patient/subscriptions/active` | My current active package |
+| GET | `/patient/subscriptions` | My package purchase history |
+| GET | `/patient/services` | Browse one-time services |
+| GET | `/patient/services/:id` | Service detail |
+| GET | `/patient/service-bookings` | My paid service bookings |
+| GET | `/patient/service-bookings/:id` | Single service booking |
+| GET | `/patient/digital-products` | Browse digital products |
+| GET | `/patient/digital-products/:id` | Digital product detail |
+| GET | `/patient/library` | My owned products (purchased + freebies) |
+| POST | `/patient/payments/dummy-checkout` | Buy (use this — Razorpay not live yet) |
+| POST | `/patient/payments/create-order` | Create Razorpay order (save for later) |
+| POST | `/patient/payments/verify` | Verify Razorpay payment |
+| GET | `/patient/payments/my-orders` | Purchase history |
+| GET | `/patient/diet-plan` | My diet plan |
+| GET | `/patient/blood-reports` | My blood reports |
 
 ---
 
-# 1) Patient Dashboard
+## 1. Dashboard
 
-### Endpoint
+### GET `/patient/dashboard`
 
-```http
-GET /patient/dashboard
-```
-
-### Full URL
-
-```text
-https://dr-dietician-backend.onrender.com/api/patient/dashboard
-```
-
-### Success Response
-
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Patient dashboard fetched successfully",
   "data": {
     "patient": {
       "id": "patient_id",
@@ -109,7 +84,9 @@ https://dr-dietician-backend.onrender.com/api/patient/dashboard
       "dateTime": "2026-07-20T10:00:00.000Z",
       "type": "ONLINE",
       "status": "CONFIRMED",
-      "notes": "Follow-up consultation",
+      "notes": "Follow-up",
+      "rescheduledByDoctor": false,
+      "rescheduleInfo": null,
       "doctor": {
         "id": "doctor_id",
         "fullName": "Dr. Smith",
@@ -121,69 +98,71 @@ https://dr-dietician-backend.onrender.com/api/patient/dashboard
         }
       }
     },
-    "nextCheckup": {
-      "days": 2,
-      "label": "2 days"
+    "nextCheckup": { "days": 2, "label": "2 days" },
+    "stats": { "totalAppointments": 5 },
+    "activePackage": {
+      "id": "sub_id",
+      "status": "ACTIVE",
+      "duration": "THREE_MONTHS",
+      "meetingsPerMonth": 4,
+      "meetingsUsedThisMonth": 1,
+      "meetingsRemainingThisMonth": 3,
+      "meetingsLabel": "3 of 4 meetings left this month",
+      "endsAt": "2026-11-14T00:00:00.000Z",
+      "package": { "name": "Thyroid Management", "category": "Thyroid" },
+      "doctor": { "id": "doctor_id", "fullName": "Dr. John Smith", "doctorProfile": { "specialization": "Nutrition" } }
     },
-    "stats": {
-      "totalAppointments": 5
+    "dietPlan": {
+      "visible": false,
+      "patientStatus": "IN_PROGRESS",
+      "message": "Your dietitian is preparing your plan",
+      "plan": null
     },
     "quickActions": {
       "availablePackages": 4,
-      "availableDigitalProducts": 8
+      "availableDigitalProducts": 8,
+      "availableServices": 2
     },
-    "dietPlan": null,
-    "recentActivity": []
+    "library": {
+      "items": [],
+      "pagination": { "totalItems": 0, "page": 1, "limit": 4, "totalPages": 0 }
+    }
   }
 }
 ```
 
-### Field Notes
-
-- `upcomingAppointment` → `null` if no upcoming appointments
+**Key notes:**
+- `upcomingAppointment` → `null` if none
+- `activePackage` → `null` if no package purchased
 - `nextCheckup.label` → `"Today"` / `"Tomorrow"` / `"X days"` / `null`
 - `vitals.bmiStatus` → `"Underweight"` / `"Normal"` / `"Overweight"` / `"Obese"`
-- `vitals.vitalsStatus` → `"Normal"` if height, weight, bloodGroup all filled; else `"Incomplete"`
-- `dietPlan` → currently `null` (coming soon)
-- `recentActivity` → currently `[]` (coming soon)
+- `vitals.vitalsStatus` → `"Normal"` if height/weight/bloodGroup all filled, else `"Incomplete"`
+- `dietPlan.visible` → show meal content only when `true`
+- When doctor rescheduled: `rescheduleInfo.message` = `"Rescheduled by Dr. John Smith"` — show as banner
 
 ---
 
-# 2) Patient Profile
+## 2. Profile
 
-## Get Profile
+### GET `/patient/profile`
 
-### Endpoint
-
-```http
-GET /patient/profile
-```
-
-### Full URL
-
-```text
-https://dr-dietician-backend.onrender.com/api/patient/profile
-```
-
-### Success Response
-
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Profile fetched successfully",
   "data": {
     "id": "patient_id",
     "fullName": "Ananya Sharma",
-    "email": "ananya.sharma@email.com",
+    "email": "ananya@example.com",
     "profilePhotoUrl": null,
     "isEmailVerified": false,
     "lastLoginAt": "2026-07-18T00:00:00.000Z",
     "createdAt": "2026-06-28T00:00:00.000Z",
     "patientProfile": {
       "gender": "FEMALE",
-      "location": "Banjara Hills, Hyderabad",
-      "phoneNumber": "+91 98765 43210",
-      "whatsappNumber": "+91 98765 43210",
+      "location": "Hyderabad",
+      "phoneNumber": "9876543210",
+      "whatsappNumber": "9876543210",
       "age": 28,
       "heightCm": 162,
       "weightKg": 65,
@@ -199,116 +178,57 @@ https://dr-dietician-backend.onrender.com/api/patient/profile
 
 ---
 
-## Update Profile
+### PUT `/patient/profile`
 
-### Endpoint
+All fields optional.
 
-```http
-PUT /patient/profile
-```
-
-All fields are optional — only send what needs to change.
-
-### Request Body
-
+**Request Body:**
 ```json
 {
-  "fullName": "Ananya Sharma Updated",
+  "fullName": "Ananya Updated",
   "patientProfile": {
-    "phoneNumber": "+91 99999 99999",
-    "whatsappNumber": "+91 99999 99999",
-    "location": "Jubilee Hills, Hyderabad",
+    "phoneNumber": "9999999999",
+    "whatsappNumber": "9999999999",
+    "location": "Hyderabad",
     "age": 29,
     "heightCm": 163,
     "weightKg": 63,
     "bloodGroup": "B_POS",
     "gender": "FEMALE",
-    "socialHandle": "@ananya_updated",
+    "socialHandle": "@ananya_new",
     "isDefencePersonnel": false
   }
 }
 ```
 
-### Field Notes
-
-**User Level (optional):**
-- `fullName` → string
-- `profilePhotoUrl` → string (use upload endpoint instead)
-
-**Patient Profile (optional, inside `patientProfile`):**
-- `gender` → `MALE` | `FEMALE` | `OTHER` | `PREFER_NOT_TO_SAY`
-- `location` → string
-- `phoneNumber` → string
-- `whatsappNumber` → string
-- `age` → number
-- `heightCm` → number
-- `weightKg` → number
-- `bloodGroup` → `A_POS` | `A_NEG` | `B_POS` | `B_NEG` | `AB_POS` | `AB_NEG` | `O_POS` | `O_NEG`
-- `socialHandle` → string
-- `isDefencePersonnel` → boolean
-
-**Note:** Email cannot be changed by the patient.
+> Email cannot be changed by patient.
 
 ---
 
-## Update Profile Photo
+### POST `/upload/profile-photo`
 
-Use the upload endpoint — it automatically saves to the patient's profile:
+- **Request:** `multipart/form-data`, field: `photo`
+- Photo is automatically saved to profile — no second call needed.
 
-```http
-POST /upload/profile-photo
-Authorization: Bearer <patient_token>
-Content-Type: multipart/form-data
-```
-
-Form field: `photo` (image file)
-
-```js
-const formData = new FormData();
-formData.append("photo", imageFile);
-
-fetch("https://dr-dietician-backend.onrender.com/api/upload/profile-photo", {
-  method: "POST",
-  headers: { Authorization: `Bearer ${patientToken}` },
-  body: formData
-});
+**Response:**
+```json
+{ "success": true, "data": { "profilePhotoUrl": "/uploads/1720000000000.png" } }
 ```
 
 ---
 
-# 3) Appointments
+## 3. Appointments
 
-> **Full appointment lifecycle docs** (patient booking, doctor reschedule, admin oversight): see [`APPOINTMENTS_API.md`](./APPOINTMENTS_API.md)
+### GET `/patient/appointments/doctors`
 
-## Browse Available Doctors
+Browse approved doctors for booking.
 
-### Endpoint
+**Query Params:** `search` (name/specialization), `specialization`
 
-```http
-GET /patient/appointments/doctors
-```
-
-### Query Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `search` | string | Search by doctor name or specialization |
-| `specialization` | string | Filter by specialization |
-
-### Example URLs
-
-```text
-GET /patient/appointments/doctors
-GET /patient/appointments/doctors?specialization=Nutrition
-GET /patient/appointments/doctors?search=smith
-```
-
-### Success Response
-
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Available doctors fetched successfully",
   "data": [
     {
       "id": "doctor_id",
@@ -326,18 +246,13 @@ GET /patient/appointments/doctors?search=smith
 }
 ```
 
+> **Important:** If patient has an active package with an assigned doctor, this endpoint returns **only that doctor** (pre-select them). If waiting for assignment → empty list.
+
 ---
 
-## Book Appointment
+### POST `/patient/appointments`
 
-### Endpoint
-
-```http
-POST /patient/appointments
-```
-
-### Request Body
-
+**Request Body:**
 ```json
 {
   "doctorId": "doctor_id",
@@ -347,122 +262,55 @@ POST /patient/appointments
 }
 ```
 
-### Field Notes
+> `doctorId` and `dateTime` required. `type` defaults to `ONLINE`. `dateTime` must be future ISO 8601.
 
-- `doctorId` → string (required, get from browse doctors endpoint)
-- `dateTime` → ISO 8601 format (required, must be future date)
-- `type` → `ONLINE` | `IN_PERSON` (default: `ONLINE`)
-- `notes` → string (optional)
-
-### Success Response
-
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Appointment booked successfully",
   "data": {
     "id": "appointment_id",
     "dateTime": "2026-07-25T10:00:00.000Z",
     "type": "ONLINE",
     "status": "PENDING",
     "notes": "First consultation for thyroid issue",
-    "createdAt": "2026-07-18T00:00:00.000Z",
     "doctor": {
       "id": "doctor_id",
       "fullName": "Dr. John Smith",
       "profilePhotoUrl": null,
-      "doctorProfile": {
-        "specialization": "Nutrition",
-        "hospitalName": "City Hospital",
-        "phoneNumber": "9876543210"
-      }
+      "doctorProfile": { "specialization": "Nutrition", "hospitalName": "City Hospital" }
     }
   }
 }
 ```
 
-### Error Responses
+**Package-related errors (handle in UI):**
 
-```json
-{ "success": false, "message": "doctorId and dateTime are required" }
-{ "success": false, "message": "Doctor not found or not available" }
-{ "success": false, "message": "Doctor is not approved yet" }
-{ "success": false, "message": "Appointment date must be in the future" }
-{ "success": false, "message": "Doctor already has an appointment at this time. Please choose another slot." }
-```
-
-### Frontend Booking Flow
-
-```js
-// 1. Browse doctors
-const doctors = await fetch("/api/patient/appointments/doctors", {
-  headers: { Authorization: `Bearer ${token}` }
-}).then(r => r.json());
-
-// 2. Patient selects doctor and picks date/time
-
-// 3. Book appointment
-const booking = await fetch("/api/patient/appointments", {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    doctorId: "selected_doctor_id",
-    dateTime: "2026-07-25T10:00:00.000Z",
-    type: "ONLINE",
-    notes: "Thyroid consultation"
-  })
-}).then(r => r.json());
-```
-
-**Note:** There is no available-slots API yet. The patient picks a date/time manually; the backend rejects conflicting times on book. Doctors can reschedule via `PATCH /doctor/appointments/:id` — see [`APPOINTMENTS_API.md`](./APPOINTMENTS_API.md).
+| Error message | What to show |
+|---|---|
+| `An active package is required to book an appointment` | CTA: buy a package |
+| `Your package is waiting for admin to assign a doctor` | Show waiting state |
+| `You can only book appointments with your assigned package doctor` | Use `activePackage.doctor.id` |
+| `Monthly appointment limit reached (4 meetings). Try again next month.` | Disable book button |
 
 ---
 
-## My Appointments List
+### GET `/patient/appointments`
 
-### Endpoint
+**Query Params:**
 
-```http
-GET /patient/appointments
-```
+| Param | Description |
+|---|---|
+| `status` | `PENDING` \| `CONFIRMED` \| `COMPLETED` \| `CANCELLED` |
+| `type` | `ONLINE` \| `IN_PERSON` |
+| `upcoming` | `true` → future only |
+| `past` | `true` → past only |
+| `page` / `limit` | Pagination |
 
-### Query Parameters
-
-| Parameter | Type | Description | Example |
-|-----------|------|-------------|---------|
-| `page` | number | Page number | `1` |
-| `limit` | number | Items per page | `10` |
-| `status` | string | Filter by status | `CONFIRMED` |
-| `type` | string | Filter by type | `ONLINE` |
-| `upcoming` | boolean | Only future appointments | `true` |
-| `past` | boolean | Only past appointments | `true` |
-
-### Status Values
-
-- `PENDING` — Waiting for doctor confirmation
-- `CONFIRMED` — Doctor confirmed
-- `COMPLETED` — Appointment done
-- `CANCELLED` — Cancelled
-
-### Example URLs
-
-```text
-GET /patient/appointments
-GET /patient/appointments?upcoming=true
-GET /patient/appointments?past=true
-GET /patient/appointments?status=CONFIRMED
-GET /patient/appointments?type=ONLINE&page=1&limit=10
-```
-
-### Success Response
-
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Appointments fetched successfully",
   "data": {
     "items": [
       {
@@ -471,7 +319,6 @@ GET /patient/appointments?type=ONLINE&page=1&limit=10
         "type": "ONLINE",
         "status": "CONFIRMED",
         "notes": "Thyroid consultation",
-        "createdAt": "2026-07-18T00:00:00.000Z",
         "rescheduledByDoctor": true,
         "rescheduledAt": "2026-08-13T12:30:00.000Z",
         "previousDateTime": "2026-07-20T10:00:00.000Z",
@@ -485,217 +332,258 @@ GET /patient/appointments?type=ONLINE&page=1&limit=10
           "id": "doctor_id",
           "fullName": "Dr. John Smith",
           "profilePhotoUrl": null,
-          "doctorProfile": {
-            "specialization": "Nutrition",
-            "hospitalName": "City Hospital",
-            "clinicAddress": "123 Main Street",
-            "phoneNumber": "9876543210"
-          }
+          "doctorProfile": { "specialization": "Nutrition", "hospitalName": "City Hospital", "phoneNumber": "9876543210" }
         }
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "totalItems": 5,
-      "totalPages": 1
-    }
+    "pagination": { "page": 1, "limit": 10, "totalItems": 5, "totalPages": 1 }
   }
 }
 ```
+
+> When `rescheduleInfo` is not null → show banner: **"Rescheduled by Dr. John Smith"** with old time crossed out.
 
 ---
 
-## Single Appointment Detail
+### GET `/patient/appointments/:id`
 
-### Endpoint
-
-```http
-GET /patient/appointments/:id
-```
-
-Returns full appointment with complete doctor profile.
-
-### Success Response
-
-```json
-{
-  "success": true,
-  "message": "Appointment fetched successfully",
-  "data": {
-    "id": "appointment_id",
-    "dateTime": "2026-07-25T10:00:00.000Z",
-    "type": "ONLINE",
-    "status": "CONFIRMED",
-    "notes": "Thyroid consultation",
-    "createdAt": "2026-07-18T00:00:00.000Z",
-    "updatedAt": "2026-07-19T00:00:00.000Z",
-    "doctor": {
-      "id": "doctor_id",
-      "fullName": "Dr. John Smith",
-      "email": "doctor@example.com",
-      "profilePhotoUrl": null,
-      "doctorProfile": {
-        "specialization": "Nutrition",
-        "qualification": "MBBS, MD",
-        "hospitalName": "City Hospital",
-        "clinicAddress": "123 Main Street",
-        "phoneNumber": "9876543210",
-        "yearsOfExperience": 8
-      }
-    }
-  }
-}
-```
+Full detail with complete doctor profile. Same shape as list item.
 
 ---
 
-## Cancel Appointment
+### PATCH `/patient/appointments/:id/cancel`
 
-### Endpoint
+No request body. Can cancel `PENDING` or `CONFIRMED` only.
 
-```http
-PATCH /patient/appointments/:id/cancel
-```
-
-### Request Body
-
-No body required.
-
-### Success Response
-
-```json
-{
-  "success": true,
-  "message": "Appointment cancelled successfully",
-  "data": {
-    "id": "appointment_id",
-    "status": "CANCELLED",
-    "dateTime": "2026-07-25T10:00:00.000Z",
-    "type": "ONLINE",
-    "doctor": {
-      "id": "doctor_id",
-      "fullName": "Dr. John Smith",
-      "doctorProfile": { "specialization": "Nutrition" }
-    }
-  }
-}
-```
-
-### Error Responses
-
+**Errors:**
 ```json
 { "success": false, "message": "Appointment is already cancelled" }
 { "success": false, "message": "Cannot cancel a completed appointment" }
-{ "success": false, "message": "Appointment not found" }
 ```
 
 ---
 
-# 4) Packages
+## 4. Packages
 
-## Browse Packages
+### GET `/patient/packages`
 
-### Endpoint
+**Query Params:** `search`, `category`
 
-```http
-GET /patient/packages
-```
-
-### Query Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `search` | string | Search in name, category, description |
-| `category` | string | Filter by category |
-
-### Example URLs
-
-```text
-GET /patient/packages
-GET /patient/packages?category=Thyroid
-GET /patient/packages?search=diabetes
-```
-
-### Success Response
-
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Packages fetched successfully",
   "data": [
     {
       "id": "package_id",
       "name": "Thyroid Management",
       "category": "Thyroid",
-      "description": "Specialized diet plan for thyroid health management.",
-      "price1Month": 1299,
+      "description": "Specialized diet plan for thyroid health",
       "price3Months": 5499,
       "price6Months": 9999,
-      "features": [
-        "Weekly diet plan",
-        "Blood report review",
-        "Monthly consultation"
-      ],
-      "isActive": true,
-      "createdAt": "2026-07-10T00:00:00.000Z"
+      "price12Months": 17999,
+      "features": ["Weekly diet plan", "Blood report review", "Monthly consultation"],
+      "isActive": true
     }
   ]
 }
 ```
 
----
-
-## Package Detail
-
-### Endpoint
-
-```http
-GET /patient/packages/:id
-```
-
-Returns a single active package. Returns error if package not found or inactive.
+> Show **3 / 6 / 12 month** pricing tabs. No 1-month option.
 
 ---
 
-# 5) Digital Products
+### GET `/patient/packages/:id`
 
-## Browse Digital Products
-
-### Endpoint
-
-```http
-GET /patient/digital-products
-```
-
-### Query Parameters
-
-| Parameter | Type | Description | Example |
-|-----------|------|-------------|---------|
-| `page` | number | Page number | `1` |
-| `limit` | number | Items per page | `10` |
-| `search` | string | Search in title, author, description | `thyroid` |
-| `category` | string | Filter by category | `Diabetes` |
-| `isFree` | boolean | Free products only | `true` |
-| `language` | string | Filter by language | `Hindi` |
-| `minPrice` | number | Min price filter | `100` |
-| `maxPrice` | number | Max price filter | `500` |
-
-### Example URLs
-
-```text
-GET /patient/digital-products
-GET /patient/digital-products?category=Thyroid
-GET /patient/digital-products?isFree=true
-GET /patient/digital-products?search=diet&minPrice=100&maxPrice=500
-```
-
-### Success Response
+Single active package with `freebies` for 12-month tier:
 
 ```json
 {
+  "id": "package_id",
+  "name": "Thyroid Management",
+  "price3Months": 5499,
+  "price6Months": 9999,
+  "price12Months": 17999,
+  "freebies": [
+    { "id": "product_id", "title": "Thyroid Diet Guide", "thumbnailUrl": "...", "previewUrl": "..." }
+  ]
+}
+```
+
+> Show "Includes free: Thyroid Guide, Recipe Book" on the 12-month card.
+
+---
+
+## 5. Subscriptions (Package Purchases)
+
+### GET `/patient/subscriptions/active`
+
+Returns current package or `null`.
+
+**Response:**
+```json
+{
   "success": true,
-  "message": "Digital products fetched successfully",
+  "data": {
+    "id": "sub_id",
+    "status": "ACTIVE",
+    "duration": "THREE_MONTHS",
+    "meetingsPerMonth": 4,
+    "meetingsUsedThisMonth": 1,
+    "meetingsRemainingThisMonth": 3,
+    "meetingsLabel": "3 of 4 meetings left this month",
+    "startsAt": "2026-08-14T03:30:00.000Z",
+    "endsAt": "2026-11-14T03:30:00.000Z",
+    "assignedAt": "2026-08-14T04:00:00.000Z",
+    "package": { "id": "pkg_id", "name": "Thyroid Management", "category": "Thyroid" },
+    "doctor": {
+      "id": "doctor_id",
+      "fullName": "Dr. John Smith",
+      "profilePhotoUrl": null,
+      "doctorProfile": { "specialization": "Nutrition", "hospitalName": "City Hospital" }
+    }
+  }
+}
+```
+
+> Always use `meetingsLabel` or `meetingsRemainingThisMonth` for display — **never** `meetingsUsedThisMonth`.
+
+**Status values:**
+
+| Status | Show |
+|---|---|
+| `PENDING_ASSIGNMENT` | "Waiting for doctor assignment" |
+| `ACTIVE` | Show doctor + meetings |
+| `EXPIRED` | Expired |
+| `CANCELLED` | Cancelled |
+
+---
+
+### GET `/patient/subscriptions`
+
+All past and present subscriptions. **Query Params:** `status`, `page`, `limit`
+
+---
+
+## 6. Services (One-Time Bookings)
+
+Two service types:
+
+| Type | Name | Price | Notes |
+|---|---|---|---|
+| `ONE_ON_ONE_CONSULTATION` | One-on-One Diet Consultation | ₹799 | 60 min, doctor auto-assigned |
+| `LAB_REPORT_ANALYSIS` | Lab Report Analysis | ₹499 | Doctor reviews reports |
+
+**Flow:** Browse → Pay (`dummy-checkout` with `itemType: SERVICE`) → Booking auto-created → Doctor schedules/completes
+
+---
+
+### GET `/patient/services`
+
+**Query Params:** `type`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "service_id",
+        "type": "ONE_ON_ONE_CONSULTATION",
+        "name": "One-on-One Diet Consultation",
+        "description": "60-minute 1:1 consultation. Pay in full at booking. A doctor is assigned automatically.",
+        "price": 799,
+        "durationMinutes": 60,
+        "isActive": true
+      },
+      {
+        "id": "service_id_2",
+        "type": "LAB_REPORT_ANALYSIS",
+        "name": "Lab Report Analysis",
+        "description": "Dietitian reviews your lab/blood reports and shares notes.",
+        "price": 499,
+        "durationMinutes": null,
+        "isActive": true
+      }
+    ]
+  }
+}
+```
+
+---
+
+### GET `/patient/services/:id`
+
+Single service — same shape as above.
+
+---
+
+### GET `/patient/service-bookings`
+
+**Query Params:** `status`, `type`, `page`, `limit`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "booking_id",
+        "status": "AWAITING_SCHEDULE",
+        "patientNotes": "Prefer morning slots",
+        "doctorNotes": null,
+        "preferredDateTime": null,
+        "appointmentType": "ONLINE",
+        "completedAt": null,
+        "createdAt": "2026-08-13T10:00:00.000Z",
+        "service": { "type": "ONE_ON_ONE_CONSULTATION", "name": "One-on-One Diet Consultation", "price": 799 },
+        "doctor": {
+          "id": "doctor_id",
+          "fullName": "Dr. John Smith",
+          "profilePhotoUrl": null,
+          "doctorProfile": { "specialization": "Nutrition", "hospitalName": "City Hospital" }
+        },
+        "appointment": { "id": "appointment_id", "dateTime": "2026-08-20T10:00:00.000Z", "type": "ONLINE", "status": "PENDING" },
+        "order": { "amount": 799, "status": "PAID", "paidAt": "2026-08-13T10:00:00.000Z" }
+      }
+    ],
+    "pagination": { "page": 1, "limit": 10, "totalItems": 2, "totalPages": 1 }
+  }
+}
+```
+
+> `appointment` is `null` for `LAB_REPORT_ANALYSIS`.
+
+**Booking status UI:**
+
+| Status | Show |
+|---|---|
+| `PAID` | Lab analysis — doctor will review |
+| `AWAITING_SCHEDULE` | "Doctor will schedule your appointment soon" |
+| `SCHEDULED` | Show appointment date/time |
+| `COMPLETED` | Show `doctorNotes` if present |
+| `CANCELLED` | — |
+
+---
+
+### GET `/patient/service-bookings/:id`
+
+Single booking — same shape as list item.
+
+---
+
+## 7. Digital Products
+
+### GET `/patient/digital-products`
+
+**Query Params:** `search`, `category`, `isFree`, `language`, `minPrice`, `maxPrice`, `page`, `limit`
+
+**Response:**
+```json
+{
+  "success": true,
   "data": {
     "items": [
       {
@@ -703,147 +591,210 @@ GET /patient/digital-products?search=diet&minPrice=100&maxPrice=500
         "title": "Thyroid Diet Guide",
         "category": "Thyroid",
         "price": 299,
-        "description": "Complete guide for thyroid patients...",
+        "description": "Complete guide for thyroid patients",
         "thumbnailUrl": "/uploads/digital-products/thumbnails/dp-thumb-123.png",
+        "previewUrl": "/uploads/digital-products/previews/preview-123.pdf",
+        "fileUrl": null,
         "author": "Dr. Smith",
         "pageCount": 45,
         "language": "English",
         "isFree": false,
-        "totalSales": 12,
-        "createdAt": "2026-07-10T00:00:00.000Z"
+        "hasAccess": false,
+        "accessType": null,
+        "totalSales": 12
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "totalItems": 8,
-      "totalPages": 1
+    "pagination": { "page": 1, "limit": 10, "totalItems": 8, "totalPages": 1 }
+  }
+}
+```
+
+**Key fields:**
+
+| Field | Use |
+|---|---|
+| `previewUrl` | Always show **Preview (2 pages)** — even before buy |
+| `fileUrl` | Full PDF. `null` until owned |
+| `hasAccess` | `true` → show **Download / Read** |
+| `accessType` | `PURCHASED` \| `PACKAGE_FREEBIE` \| `FREE` \| `null` |
+
+> Buy only if `hasAccess === false` and `isFree === false`. Free products (`isFree: true`) have `hasAccess: true` and `fileUrl` already set.
+
+---
+
+### GET `/patient/digital-products/:id`
+
+Same fields as above. `fileUrl` present if `hasAccess: true`.
+
+---
+
+### GET `/patient/library`
+
+Owned products — purchases + 12-month package freebies. All items have `fileUrl`.
+
+**Query Params:** `page`, `limit`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "product_id",
+        "title": "Thyroid Diet Guide",
+        "fileUrl": "/uploads/digital-products/files/dp-file-123.pdf",
+        "previewUrl": "...",
+        "thumbnailUrl": "...",
+        "accessType": "PURCHASED"
+      }
+    ],
+    "pagination": { "page": 1, "limit": 10, "totalItems": 3, "totalPages": 1 }
+  }
+}
+```
+
+---
+
+## 8. Payments
+
+> **Razorpay is not live yet. Use `dummy-checkout` for all purchases.**
+
+### POST `/patient/payments/dummy-checkout`  ← USE THIS NOW
+
+Instantly marks order as PAID without Razorpay.
+
+**Buy a Package:**
+```json
+{
+  "itemType": "PACKAGE",
+  "itemId": "package_id",
+  "duration": "THREE_MONTHS"
+}
+```
+
+**Buy a Digital Product:**
+```json
+{
+  "itemType": "DIGITAL_PRODUCT",
+  "itemId": "product_id"
+}
+```
+
+**Buy a Service:**
+```json
+{
+  "itemType": "SERVICE",
+  "itemId": "service_id",
+  "preferredDateTime": "2026-08-20T10:00:00.000Z",
+  "appointmentType": "ONLINE",
+  "notes": "Prefer morning slots"
+}
+```
+
+> For SERVICE: `preferredDateTime` optional (consultation only). If omitted, doctor sets time later.
+
+**Duration values for PACKAGE:**
+
+| UI label | `duration` value |
+|---|---|
+| 3 Months | `THREE_MONTHS` |
+| 6 Months | `SIX_MONTHS` |
+| 12 Months | `TWELVE_MONTHS` |
+
+**Response (package):**
+```json
+{
+  "success": true,
+  "data": {
+    "dummy": true,
+    "orderId": "order_uuid",
+    "itemType": "PACKAGE",
+    "itemName": "Thyroid Management - 3 Months",
+    "amount": 5499,
+    "paidAt": "2026-08-14T03:30:00.000Z",
+    "subscription": {
+      "id": "sub_id",
+      "status": "PENDING_ASSIGNMENT",
+      "duration": "THREE_MONTHS",
+      "meetingsPerMonth": 4,
+      "endsAt": "2026-11-14T03:30:00.000Z",
+      "doctor": null,
+      "package": { "id": "pkg_id", "name": "Thyroid Management", "category": "Thyroid" }
     }
   }
 }
 ```
 
-**Note:** `fileUrl` is NOT included in the list view.
+After package buy: show **"Payment successful. Admin will assign a doctor shortly."**
 
----
-
-## Digital Product Detail
-
-### Endpoint
-
-```http
-GET /patient/digital-products/:id
-```
-
-### Success Response
-
+**Errors:**
 ```json
-{
-  "success": true,
-  "message": "Digital product fetched successfully",
-  "data": {
-    "id": "product_id",
-    "title": "Thyroid Diet Guide",
-    "category": "Thyroid",
-    "price": 299,
-    "description": "Complete guide for thyroid patients...",
-    "thumbnailUrl": "/uploads/digital-products/thumbnails/dp-thumb-123.png",
-    "fileUrl": "/uploads/digital-products/files/dp-file-123.pdf",
-    "author": "Dr. Smith",
-    "pageCount": 45,
-    "language": "English",
-    "isFree": false,
-    "totalSales": 12,
-    "createdAt": "2026-07-10T00:00:00.000Z"
-  }
-}
+{ "success": false, "message": "You already have an active package. Wait until it expires before buying another." }
+{ "success": false, "message": "You already have access to this product" }
+{ "success": false, "message": "duration is required for package purchase (THREE_MONTHS, SIX_MONTHS, TWELVE_MONTHS)" }
 ```
-
-**Note:** Purchase gating for `fileUrl` is planned; verify access via `GET /patient/payments/my-orders` after payment.
 
 ---
 
-# 6) Payments (Razorpay)
+### POST `/patient/payments/create-order`  ← FOR LATER (Razorpay)
 
-Use these endpoints to purchase packages or paid digital products.
-
-## Create Order
-
-### Endpoint
-
-```http
-POST /patient/payments/create-order
-```
-
-### Request Body — Buy a Package
-
+**Request Body:**
 ```json
 {
   "itemType": "PACKAGE",
-  "itemId": "package_id_here",
-  "duration": "ONE_MONTH"
+  "itemId": "package_id",
+  "duration": "THREE_MONTHS"
 }
 ```
 
-### Request Body — Buy a Digital Product
-
-```json
-{
-  "itemType": "DIGITAL_PRODUCT",
-  "itemId": "product_id_here"
-}
-```
-
-### Field Notes
-
-- `itemType` → `PACKAGE` | `DIGITAL_PRODUCT`
-- `itemId` → ID of the package or digital product
-- `duration` → Required only for `PACKAGE`: `ONE_MONTH` | `THREE_MONTHS` | `SIX_MONTHS`
-
-### Success Response
-
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Order created successfully",
   "data": {
     "orderId": "order_QzXvYz123456",
-    "amount": 129900,
+    "amount": 549900,
     "currency": "INR",
-    "keyId": "rzp_test_xxxxxxxxxxxx",
-    "itemName": "Thyroid Management - 1 Month",
-    "dbOrderId": "uuid_order_id"
+    "keyId": "rzp_test_xxx",
+    "itemName": "Thyroid Management - 3 Months",
+    "dbOrderId": "internal_order_id"
   }
 }
 ```
 
-- `amount` is in **paise** (129900 = ₹1299.00)
-- `keyId` is the Razorpay key for the frontend checkout popup
-- `orderId` is the Razorpay order ID to pass to the popup
+> `amount` is in **paise** (₹5499 = 549900 paise).
 
-### Error Responses
-
-```json
-{ "success": false, "message": "itemType and itemId are required" }
-{ "success": false, "message": "duration is required for package purchase (ONE_MONTH, THREE_MONTHS, SIX_MONTHS)" }
-{ "success": false, "message": "Package not found or inactive" }
-{ "success": false, "message": "Digital product not found" }
-{ "success": false, "message": "This product is free, no payment required" }
+**Razorpay JS integration:**
+```js
+const options = {
+  key: orderData.keyId,
+  amount: orderData.amount,
+  currency: orderData.currency,
+  order_id: orderData.orderId,
+  name: "DrDiet Therapy",
+  description: orderData.itemName,
+  handler: async (response) => {
+    await fetch("/api/patient/payments/verify", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        razorpayOrderId: response.razorpay_order_id,
+        razorpayPaymentId: response.razorpay_payment_id,
+        razorpaySignature: response.razorpay_signature,
+      }),
+    });
+  },
+  theme: { color: "#0d9488" },
+};
+new window.Razorpay(options).open();
 ```
+
+**Test card:** `4111 1111 1111 1111`, any future expiry, CVV `123`, OTP `1234`
 
 ---
 
-## Verify Payment
-
-Call this after Razorpay popup returns success.
-
-### Endpoint
-
-```http
-POST /patient/payments/verify
-```
-
-### Request Body
+### POST `/patient/payments/verify`  ← FOR LATER (Razorpay)
 
 ```json
 {
@@ -853,268 +804,179 @@ POST /patient/payments/verify
 }
 ```
 
-### Success Response
-
-```json
-{
-  "success": true,
-  "message": "Payment verified successfully",
-  "data": {
-    "success": true,
-    "orderId": "uuid_order_id",
-    "itemType": "PACKAGE",
-    "itemName": "Thyroid Management - 1 Month",
-    "amount": 1299,
-    "paidAt": "2026-07-18T12:30:00.000Z",
-    "message": "Payment successful! You now have access to your purchase."
-  }
-}
-```
-
-### Error Responses
-
-```json
-{ "success": false, "message": "razorpayOrderId, razorpayPaymentId and razorpaySignature are required" }
-{ "success": false, "message": "Order not found or already processed" }
-{ "success": false, "message": "Payment verification failed. Invalid signature." }
-```
-
 ---
 
-## My Orders (Purchase History)
+### GET `/patient/payments/my-orders`
 
-### Endpoint
+**Query Params:** `status` (`PENDING` | `PAID` | `FAILED` | `REFUNDED`), `itemType` (`PACKAGE` | `DIGITAL_PRODUCT` | `SERVICE`), `page`, `limit`
 
-```http
-GET /patient/payments/my-orders
-```
-
-### Query Parameters
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `page` | number | Page number (default: 1) |
-| `limit` | number | Items per page (default: 10) |
-| `status` | string | `PENDING` \| `PAID` \| `FAILED` \| `REFUNDED` |
-| `itemType` | string | `PACKAGE` \| `DIGITAL_PRODUCT` |
-
-### Success Response
-
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Orders fetched successfully",
   "data": {
     "items": [
       {
         "id": "order_id",
         "itemType": "PACKAGE",
-        "itemId": "package_id",
-        "itemName": "Thyroid Management - 1 Month",
-        "amount": 1299,
+        "itemName": "Thyroid Management - 3 Months",
+        "amount": 5499,
         "currency": "INR",
-        "duration": "ONE_MONTH",
+        "duration": "THREE_MONTHS",
         "status": "PAID",
-        "razorpayOrderId": "order_QzXvYz123456",
-        "razorpayPaymentId": "pay_QzXvYz789012",
-        "paidAt": "2026-07-18T12:30:00.000Z",
-        "createdAt": "2026-07-18T12:28:00.000Z"
+        "paidAt": "2026-08-14T03:30:00.000Z",
+        "createdAt": "2026-08-14T03:28:00.000Z"
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "totalItems": 3,
-      "totalPages": 1
-    }
+    "pagination": { "page": 1, "limit": 10, "totalItems": 3, "totalPages": 1 }
   }
 }
 ```
 
-### Frontend Payment Flow
-
-```js
-// 1. Create order
-const { data: order } = await fetch("/api/patient/payments/create-order", {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    itemType: "PACKAGE",
-    itemId: "package_id",
-    duration: "ONE_MONTH"
-  })
-}).then(r => r.json());
-
-// 2. Open Razorpay popup (use order.orderId, order.amount, order.keyId)
-
-// 3. On success, verify payment
-await fetch("/api/patient/payments/verify", {
-  method: "POST",
-  headers: {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    razorpayOrderId: response.razorpay_order_id,
-    razorpayPaymentId: response.razorpay_payment_id,
-    razorpaySignature: response.razorpay_signature
-  })
-});
-```
-
-For admin revenue and refund details, see `PAYMENTS_AND_REVENUE_API.md`.
+> `amount` here is in ₹ (rupees), not paise. Use for display.
 
 ---
 
-# 7) Blood Reports
+## 9. Diet Plan
 
-Doctors upload blood reports for patients. Patients can view their own reports here.
+### GET `/patient/diet-plan`
 
-## Get My Blood Reports
+Full meal content only visible after admin approves.
 
-### Endpoint
-
-```http
-GET /patient/blood-reports
+**Case 1 — No package:**
+```json
+{ "visible": false, "patientStatus": "NO_PACKAGE", "message": "Buy a package to get a personal diet plan", "plan": null }
 ```
 
-### Query Parameters
+**Case 2 — Waiting for doctor assignment:**
+```json
+{ "visible": false, "patientStatus": "WAITING_FOR_DOCTOR_ASSIGNMENT", "message": "Admin will assign a doctor, then your diet plan will be prepared", "plan": null }
+```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `page` | number | Page number (default: 1) |
-| `limit` | number | Items per page (default: 10) |
+**Case 3 — Doctor working on plan:**
+```json
+{ "visible": false, "patientStatus": "IN_PROGRESS", "message": "Your dietitian is preparing your plan", "plan": null }
+```
 
-### Success Response
+**Case 4 — Under admin review:**
+```json
+{ "visible": false, "patientStatus": "PENDING_APPROVAL", "message": "Your diet plan is being reviewed", "plan": null }
+```
 
+**Case 5 — Approved ✅ (show full content):**
+```json
+{
+  "visible": true,
+  "patientStatus": "APPROVED",
+  "message": "Your diet plan is ready",
+  "plan": {
+    "id": "plan_id",
+    "duration": "SEVEN_DAYS",
+    "durationDays": 7,
+    "calorieTarget": 1800,
+    "foodsToEat": ["Oats", "Brown rice", "Leafy greens"],
+    "foodsToAvoid": ["Refined sugar", "Fried food"],
+    "breakfast": { "time": "8:00 AM", "items": ["Oatmeal with banana"], "calories": 350 },
+    "lunch": { "time": "1:00 PM", "items": ["Brown rice", "Dal", "Sabzi"], "calories": 600 },
+    "dinner": { "time": "7:30 PM", "items": ["Roti x2", "Paneer curry"], "calories": 500 },
+    "snacks": { "morning": ["Almonds", "Green tea"], "evening": ["Fruit bowl"] },
+    "notes": "Avoid eating after 8 PM. Drink 3L water daily.",
+    "status": "APPROVED",
+    "approvedAt": "2026-08-14T08:00:00.000Z",
+    "doctor": { "fullName": "Dr. John Smith", "doctorProfile": { "specialization": "Nutrition" } }
+  }
+}
+```
+
+**UI rule:** `visible === false` → show message/status screen only. `visible === true` → show full diet plan.
+
+**`patientStatus` values:**
+
+| Value | Show |
+|---|---|
+| `NO_PACKAGE` | "Buy a package" CTA |
+| `WAITING_FOR_DOCTOR_ASSIGNMENT` | Waiting banner |
+| `IN_PROGRESS` | "Dietitian is preparing your plan" |
+| `PENDING_APPROVAL` | "Being reviewed" |
+| `APPROVED` | Full plan |
+
+> Do NOT show overdue or rejected status to the patient.
+
+---
+
+## 10. Blood Reports
+
+### GET `/patient/blood-reports`
+
+**Query Params:** `page`, `limit`
+
+**Response:**
 ```json
 {
   "success": true,
-  "message": "Blood reports fetched successfully",
   "data": {
     "items": [
       {
         "id": "report_id",
-        "patientId": "patient_id",
-        "doctorId": "doctor_id",
         "title": "CBC Report July 2026",
         "fileUrl": "/uploads/blood-reports/blood-report-123.pdf",
         "notes": "All values within normal range",
         "uploadedAt": "2026-08-13T10:00:00.000Z",
-        "updatedAt": "2026-08-13T10:00:00.000Z",
         "doctor": {
           "id": "doctor_id",
           "fullName": "Dr. John Smith",
           "profilePhotoUrl": null,
-          "doctorProfile": {
-            "specialization": "Nutrition",
-            "hospitalName": "City Hospital"
-          }
+          "doctorProfile": { "specialization": "Nutrition", "hospitalName": "City Hospital" }
         }
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "totalItems": 2,
-      "totalPages": 1
-    }
+    "pagination": { "page": 1, "limit": 10, "totalItems": 2, "totalPages": 1 }
   }
 }
 ```
 
-**Note:** Patients cannot upload or delete blood reports — that is done by doctors via the doctor panel.
+> Read-only for patients. Upload/delete is done by doctors.
 
 ---
 
-# Complete Endpoint List
+## Enum Reference
 
-```text
-# Dashboard
-GET  https://dr-dietician-backend.onrender.com/api/patient/dashboard
+### Gender
+`MALE` | `FEMALE` | `OTHER` | `PREFER_NOT_TO_SAY`
 
-# Profile
-GET  https://dr-dietician-backend.onrender.com/api/patient/profile
-PUT  https://dr-dietician-backend.onrender.com/api/patient/profile
-POST https://dr-dietician-backend.onrender.com/api/upload/profile-photo
+### Blood Group
+`A_POS` | `A_NEG` | `B_POS` | `B_NEG` | `AB_POS` | `AB_NEG` | `O_POS` | `O_NEG`
 
-# Appointments
-GET   https://dr-dietician-backend.onrender.com/api/patient/appointments/doctors
-GET   https://dr-dietician-backend.onrender.com/api/patient/appointments
-POST  https://dr-dietician-backend.onrender.com/api/patient/appointments
-GET   https://dr-dietician-backend.onrender.com/api/patient/appointments/:id
-PATCH https://dr-dietician-backend.onrender.com/api/patient/appointments/:id/cancel
+### Appointment Status
+`PENDING` | `CONFIRMED` | `COMPLETED` | `CANCELLED`
 
-# Packages
-GET  https://dr-dietician-backend.onrender.com/api/patient/packages
-GET  https://dr-dietician-backend.onrender.com/api/patient/packages/:id
+### Appointment Type
+`ONLINE` | `IN_PERSON`
 
-# Digital Products
-GET  https://dr-dietician-backend.onrender.com/api/patient/digital-products
-GET  https://dr-dietician-backend.onrender.com/api/patient/digital-products/:id
+### Subscription Status
+`PENDING_ASSIGNMENT` | `ACTIVE` | `EXPIRED` | `CANCELLED`
 
-# Payments
-POST https://dr-dietician-backend.onrender.com/api/patient/payments/create-order
-POST https://dr-dietician-backend.onrender.com/api/patient/payments/verify
-GET  https://dr-dietician-backend.onrender.com/api/patient/payments/my-orders
+### Package Duration
+`THREE_MONTHS` | `SIX_MONTHS` | `TWELVE_MONTHS`
 
-# Blood Reports
-GET  https://dr-dietician-backend.onrender.com/api/patient/blood-reports
+### Service Booking Status
+`PAID` | `AWAITING_SCHEDULE` | `SCHEDULED` | `COMPLETED` | `CANCELLED`
+
+### Order Status
+`PENDING` | `PAID` | `FAILED` | `REFUNDED`
+
+---
+
+## Error Format
+
+```json
+{ "success": false, "message": "Error description" }
 ```
 
----
-
-# Key Notes for Frontend
-
-## Authentication
-- Use patient JWT token for all `/patient/*` endpoints
-- Token is obtained from `POST /auth/login`
-- Patients can only see/modify their own data
-
-## Profile Photo
-- Upload via `POST /upload/profile-photo` (multipart/form-data, field: `photo`)
-- Photo is automatically saved to profile — no second API call needed
-
-## Appointments
-- Call `GET /patient/appointments/doctors` first to let patient choose a doctor
-- `dateTime` must be a future ISO 8601 date string
-- Appointment starts as `PENDING` — doctor confirms it to `CONFIRMED`
-- Patient can only cancel `PENDING` or `CONFIRMED` appointments
-- When doctor reschedules, patient APIs return `rescheduleInfo` with old time + message like `"Rescheduled by Dr. John Smith"`
-- Doctors can reschedule or edit via `PATCH /doctor/appointments/:id` (dateTime, type, notes)
-- Full appointment flow: [`APPOINTMENTS_API.md`](./APPOINTMENTS_API.md)
-- No available-slots API yet
-
-## Packages
-- Shows only **active** packages
-- Three pricing tiers: `price1Month`, `price3Months`, `price6Months`
-- Purchase via Razorpay: `create-order` → popup → `verify`
-
-## Digital Products
-- Shows only **PUBLISHED** products
-- `fileUrl` is hidden in browse list; shown in detail view
-- Free products (`isFree: true`) do not need payment
-- Paid products: use payment flow above
-
-## Payments
-- Razorpay `amount` in create-order response is in **paise**
-- Always call `verify` after successful Razorpay popup
-- Check `my-orders` with `status=PAID` to confirm purchase access
-
-## Blood Reports
-- Read-only for patients
-- Uploaded by doctors who have treated the patient
-
-## Dashboard
-- `nextCheckup.label` values: `"Today"` / `"Tomorrow"` / `"2 days"` / `null`
-- `vitals.bmiStatus`: `"Underweight"` / `"Normal"` / `"Overweight"` / `"Obese"`
-- `dietPlan` and `recentActivity` are placeholders — coming in a future update
-
-## Coming Soon
-- Doctor availability / time slots API
-- Patient-side appointment reschedule
-- Purchase-gated download for digital products
-- Diet plan and recent activity on dashboard
+| Code | Meaning |
+|---|---|
+| `400` | Validation / business rule |
+| `401` | Missing or invalid token |
+| `403` | Not a patient |
+| `404` | Not found |
+| `500` | Server error |
