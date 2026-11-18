@@ -19,6 +19,12 @@ const {
 } = require("./diet-plans/diet-plans.controller");
 const { getProfile, updateProfile } = require("./profile/doctor-profile.controller");
 const { uploadBloodReport, getBloodReports, getBloodReportById, updateBloodReport, deleteBloodReport } = require("./blood-reports/blood-reports.controller");
+const {
+  getMyBookings: getServiceBookings,
+  getBookingById: getServiceBookingById,
+  scheduleBooking,
+  completeBooking,
+} = require("./services/doctor-services.controller");
 
 const router = express.Router();
 
@@ -52,5 +58,10 @@ router.get("/blood-reports", authMiddleware, doctorMiddleware, getBloodReports);
 router.get("/blood-reports/:id", authMiddleware, doctorMiddleware, getBloodReportById);
 router.put("/blood-reports/:id", authMiddleware, doctorMiddleware, updateBloodReport);
 router.delete("/blood-reports/:id", authMiddleware, doctorMiddleware, deleteBloodReport);
+
+router.get("/service-bookings", authMiddleware, doctorMiddleware, getServiceBookings);
+router.get("/service-bookings/:id", authMiddleware, doctorMiddleware, getServiceBookingById);
+router.patch("/service-bookings/:id/schedule", authMiddleware, doctorMiddleware, scheduleBooking);
+router.patch("/service-bookings/:id/complete", authMiddleware, doctorMiddleware, completeBooking);
 
 module.exports = router;

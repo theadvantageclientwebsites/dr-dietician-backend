@@ -741,7 +741,7 @@
  *         schema: { type: string, enum: [PENDING, PAID, FAILED, REFUNDED] }
  *       - in: query
  *         name: itemType
- *         schema: { type: string, enum: [PACKAGE, DIGITAL_PRODUCT] }
+ *         schema: { type: string, enum: [PACKAGE, DIGITAL_PRODUCT, SERVICE] }
  *       - in: query
  *         name: fromDate
  *         schema: { type: string, example: "2026-07-01" }
@@ -751,4 +751,84 @@
  *     responses:
  *       200:
  *         description: List of orders
+ *
+ * /admin/services:
+ *   get:
+ *     tags: [Admin - Services]
+ *     summary: List services catalog
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Paginated services
+ *   post:
+ *     tags: [Admin - Services]
+ *     summary: Create a service
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [type, name, price]
+ *             properties:
+ *               type: { type: string, enum: [ONE_ON_ONE_CONSULTATION, LAB_REPORT_ANALYSIS] }
+ *               name: { type: string }
+ *               description: { type: string }
+ *               price: { type: number, example: 499 }
+ *               durationMinutes: { type: number, example: 60 }
+ *     responses:
+ *       201:
+ *         description: Created
+ *
+ * /admin/services/{id}:
+ *   put:
+ *     tags: [Admin - Services]
+ *     summary: Update a service (use this to set the consult price)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Updated
+ *
+ * /admin/services/bookings:
+ *   get:
+ *     tags: [Admin - Services]
+ *     summary: List paid service bookings
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Paginated bookings
+ *
+ * /admin/services/bookings/{id}/assign-doctor:
+ *   patch:
+ *     tags: [Admin - Services]
+ *     summary: Reassign doctor on a service booking
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [doctorId]
+ *             properties:
+ *               doctorId: { type: string }
+ *     responses:
+ *       200:
+ *         description: Doctor reassigned
  */

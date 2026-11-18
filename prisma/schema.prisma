@@ -74,6 +74,8 @@ model User {
   internProfile         InternProfile?
   appointmentsAsPatient Appointment[]      @relation("PatientAppointments")
   appointmentsAsDoctor  Appointment[]      @relation("DoctorAppointments")
+  serviceBookingsAsPatient ServiceBooking[] @relation("PatientServiceBookings")
+  serviceBookingsAsDoctor  ServiceBooking[] @relation("DoctorServiceBookings")
   courseEnrollments     CourseEnrollment[] @relation("InternEnrollments")
   orders                    Order[]            @relation("PatientOrders")
   subscriptionsAsPatient    Subscription[]     @relation("PatientSubscriptions")
@@ -95,11 +97,13 @@ model Appointment {
   previousDateTime     DateTime?
   rescheduledAt        DateTime?
   rescheduledByDoctor  Boolean           @default(false)
+  serviceBookingId     String?           @unique
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
 
-  patient   User @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
-  doctor    User @relation("DoctorAppointments",  fields: [doctorId],  references: [id], onDelete: Cascade)
+  patient        User            @relation("PatientAppointments", fields: [patientId], references: [id], onDelete: Cascade)
+  doctor         User            @relation("DoctorAppointments",  fields: [doctorId],  references: [id], onDelete: Cascade)
+  serviceBooking ServiceBooking? @relation(fields: [serviceBookingId], references: [id], onDelete: SetNull)
 }
 
 enum DigitalProductStatus {
@@ -321,8 +325,10 @@ model Order {
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
-  patient      User           @relation("PatientOrders", fields: [patientId], references: [id], onDelete: Cascade)
-  subscription Subscription?
+  checkoutMeta     Json?
+  patient          User            @relation("PatientOrders", fields: [patientId], references: [id], onDelete: Cascade)
+  subscription     Subscription?
+  serviceBooking   ServiceBooking?
 }
 
 model Subscription {
@@ -409,4 +415,58 @@ model DietPlan {
 
   @@index([doctorId, status])
   @@index([patientId, status])
+}
+
+// ─── One-time Services ────────────────────────────────────────────────────────
+
+enum ServiceType {
+  ONE_ON_ONE_CONSULTATION
+  LAB_REPORT_ANALYSIS
+}
+
+enum ServiceBookingStatus {
+  PAID
+  AWAITING_SCHEDULE
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model Service {
+  id              String      @id @default(uuid())
+  type            ServiceType
+  name            String
+  description     String?
+  price           Float
+  durationMinutes Int?
+  isActive        Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  bookings ServiceBooking[]
+}
+
+model ServiceBooking {
+  id                String               @id @default(uuid())
+  patientId         String
+  serviceId         String
+  orderId           String               @unique
+  doctorId          String
+  status            ServiceBookingStatus @default(PAID)
+  patientNotes      String?
+  doctorNotes       String?
+  preferredDateTime DateTime?
+  appointmentType   AppointmentType      @default(ONLINE)
+  completedAt       DateTime?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  patient     User          @relation("PatientServiceBookings", fields: [patientId], references: [id], onDelete: Cascade)
+  service     Service       @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  doctor      User          @relation("DoctorServiceBookings", fields: [doctorId], references: [id], onDelete: Restrict)
+  appointment Appointment?
+
+  @@index([patientId, status])
+  @@index([doctorId, status])
 }

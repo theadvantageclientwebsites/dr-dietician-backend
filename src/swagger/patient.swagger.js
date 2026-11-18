@@ -252,7 +252,7 @@
  *             properties:
  *               itemType:
  *                 type: string
- *                 enum: [PACKAGE, DIGITAL_PRODUCT]
+ *                 enum: [PACKAGE, DIGITAL_PRODUCT, SERVICE]
  *                 example: PACKAGE
  *               itemId:
  *                 type: string
@@ -308,7 +308,7 @@
  *         schema: { type: string, enum: [PENDING, PAID, FAILED, REFUNDED] }
  *       - in: query
  *         name: itemType
- *         schema: { type: string, enum: [PACKAGE, DIGITAL_PRODUCT] }
+ *         schema: { type: string, enum: [PACKAGE, DIGITAL_PRODUCT, SERVICE] }
  *     responses:
  *       200:
  *         description: My orders list
@@ -329,14 +329,67 @@
  *             properties:
  *               itemType:
  *                 type: string
- *                 enum: [PACKAGE, DIGITAL_PRODUCT]
+ *                 enum: [PACKAGE, DIGITAL_PRODUCT, SERVICE]
  *               itemId: { type: string }
  *               duration:
  *                 type: string
  *                 enum: [THREE_MONTHS, SIX_MONTHS, TWELVE_MONTHS]
+ *               preferredDateTime: { type: string, example: "2026-08-20T10:00:00.000Z" }
+ *               notes: { type: string }
+ *               appointmentType: { type: string, enum: [ONLINE, IN_PERSON] }
  *     responses:
  *       201:
- *         description: Order marked PAID without Razorpay. Package subscriptions wait for admin doctor assignment.
+ *         description: Order marked PAID without Razorpay. Services auto-assign a doctor.
+ *
+ * /patient/services:
+ *   get:
+ *     tags: [Patient - Services]
+ *     summary: Browse active one-time services
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Consultation (60 min) and lab report analysis
+ *
+ * /patient/services/{id}:
+ *   get:
+ *     tags: [Patient - Services]
+ *     summary: Service detail
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Service catalog item
+ *
+ * /patient/service-bookings:
+ *   get:
+ *     tags: [Patient - Services]
+ *     summary: My paid service bookings
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Paginated bookings with assigned doctor
+ *
+ * /patient/service-bookings/{id}:
+ *   get:
+ *     tags: [Patient - Services]
+ *     summary: Single service booking
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Booking detail
  *
  * /patient/subscriptions/active:
  *   get:

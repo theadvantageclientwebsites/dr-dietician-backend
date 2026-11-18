@@ -1,5 +1,6 @@
 const prisma = require("../../../lib/prisma");
 const { getActiveSubscription } = require("../subscriptions/subscriptions.service");
+const { syncServiceBookingFromAppointment } = require("../../services/booking-helpers");
 
 const patientAppointmentSelect = {
   id: true,
@@ -10,6 +11,7 @@ const patientAppointmentSelect = {
   previousDateTime: true,
   rescheduledAt: true,
   rescheduledByDoctor: true,
+  serviceBookingId: true,
   createdAt: true,
   updatedAt: true,
   doctor: {
@@ -206,6 +208,8 @@ const cancelAppointment = async (patientId, appointmentId) => {
     data: { status: "CANCELLED" },
     select: patientAppointmentSelect,
   });
+
+  await syncServiceBookingFromAppointment(appointment, "CANCELLED");
 
   return withRescheduleInfo(updated);
 };

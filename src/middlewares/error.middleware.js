@@ -52,6 +52,21 @@ module.exports = (err, req, res, next) => {
     "Only plans waiting for approval can be rejected",
     "You already have access to this product",
     "One or more freebie digital products were not found",
+    "Invalid itemType. Use PACKAGE, DIGITAL_PRODUCT or SERVICE",
+    "This service is not priced yet",
+    "type, name and price are required",
+    "Invalid service type",
+    "Service price must be greater than 0",
+    "Cannot delete this service because it has bookings",
+    "No approved doctor is available to assign",
+    "Cannot assign a doctor to a cancelled service booking",
+    "Cannot assign a doctor to a completed service booking",
+    "This service does not use a time slot",
+    "Cannot schedule a completed or cancelled service booking",
+    "dateTime is required",
+    "doctorNotes is required to complete lab report analysis",
+    "Cannot complete a cancelled service booking",
+    "Service booking is already completed",
   ];
 
   if (badRequestMessages.some((msg) => message.includes(msg))) {

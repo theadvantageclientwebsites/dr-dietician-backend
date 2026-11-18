@@ -45,6 +45,7 @@ const getMeetingsUsedThisMonth = async (subscription) => {
   return prisma.appointment.count({
     where: {
       patientId: subscription.patientId,
+      serviceBookingId: null,
       status: { in: ["PENDING", "CONFIRMED", "COMPLETED"] },
       dateTime: { gte: start, lt: end },
     },

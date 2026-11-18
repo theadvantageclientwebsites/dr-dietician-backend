@@ -20,6 +20,7 @@ const getRevenueSummary = async (query) => {
     totalOrders,
     packageRevenue,
     digitalProductRevenue,
+    serviceRevenue,
     recentOrders,
   ] = await Promise.all([
     // Total all-time revenue
@@ -55,6 +56,11 @@ const getRevenueSummary = async (query) => {
       _sum: { amount: true },
     }),
 
+    prisma.order.aggregate({
+      where: { ...paidWhere, itemType: "SERVICE" },
+      _sum: { amount: true },
+    }),
+
     // Recent 10 orders
     prisma.order.findMany({
       where: paidWhere,
@@ -82,6 +88,7 @@ const getRevenueSummary = async (query) => {
   const total = totalRevenue._sum.amount || 0;
   const packageTotal = packageRevenue._sum.amount || 0;
   const digitalProductTotal = digitalProductRevenue._sum.amount || 0;
+  const serviceTotal = serviceRevenue._sum.amount || 0;
 
   return {
     summary: {
@@ -98,6 +105,10 @@ const getRevenueSummary = async (query) => {
       digitalProducts: {
         revenue: digitalProductTotal,
         percentage: total > 0 ? parseFloat(((digitalProductTotal / total) * 100).toFixed(1)) : 0,
+      },
+      services: {
+        revenue: serviceTotal,
+        percentage: total > 0 ? parseFloat(((serviceTotal / total) * 100).toFixed(1)) : 0,
       },
     },
     recentTransactions: recentOrders,

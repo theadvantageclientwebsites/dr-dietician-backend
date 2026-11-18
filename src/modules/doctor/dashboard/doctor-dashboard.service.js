@@ -6,7 +6,7 @@ const getDoctorDashboard = async (doctorId) => {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const [doctor, todayAppointments, upcomingAppointment, totalPatients, pendingAppointments, completedAppointments] =
+  const [doctor, todayAppointments, upcomingAppointment, totalPatients, pendingAppointments, completedAppointments, pendingServiceBookings] =
     await Promise.all([
       // Doctor profile
       prisma.user.findUnique({
@@ -88,6 +88,13 @@ const getDoctorDashboard = async (doctorId) => {
       prisma.appointment.count({
         where: { doctorId, status: "COMPLETED" },
       }),
+
+      prisma.serviceBooking.count({
+        where: {
+          doctorId,
+          status: { in: ["PAID", "AWAITING_SCHEDULE", "SCHEDULED"] },
+        },
+      }),
     ]);
 
   if (!doctor) throw new Error("Doctor not found");
@@ -99,6 +106,7 @@ const getDoctorDashboard = async (doctorId) => {
       totalPatients: totalPatients.length,
       pendingAppointments,
       completedAppointments,
+      pendingServiceBookings,
     },
     upcomingAppointment: upcomingAppointment || null,
   };

@@ -1,4 +1,5 @@
 const prisma = require("../../../lib/prisma");
+const { syncServiceBookingFromAppointment } = require("../../services/booking-helpers");
 
 const getMyAppointments = async (doctorId, query) => {
   const page = Number(query.page) || 1;
@@ -218,7 +219,7 @@ const updateAppointmentStatus = async (doctorId, appointmentId, status, notes) =
   const updateData = { status: status.toUpperCase() };
   if (notes !== undefined) updateData.notes = notes;
 
-  return prisma.appointment.update({
+  const updated = await prisma.appointment.update({
     where: { id: appointmentId },
     data: updateData,
     select: {
@@ -233,6 +234,9 @@ const updateAppointmentStatus = async (doctorId, appointmentId, status, notes) =
       },
     },
   });
+
+  await syncServiceBookingFromAppointment(appointment, updateData.status);
+  return updated;
 };
 
 module.exports = {

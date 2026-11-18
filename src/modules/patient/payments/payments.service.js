@@ -9,6 +9,7 @@ const {
 } = require("../../../utils/package-duration");
 const { createSubscriptionFromOrder } = require("../subscriptions/subscriptions.service");
 const { getProductAccess } = require("../digital-products/product-access");
+const { buildCheckoutMeta, fulfillServiceOrder } = require("../../services/booking-helpers");
 
 const quotePurchase = async (patientId, data) => {
   const { itemType, itemId, duration } = data;
@@ -45,6 +46,7 @@ const quotePurchase = async (patientId, data) => {
       amount: getPackagePrice(pkg, duration),
       itemName: `${pkg.name} - ${DURATION_LABEL[duration]}`,
       duration,
+      checkoutMeta: null,
     };
   }
 
@@ -64,10 +66,41 @@ const quotePurchase = async (patientId, data) => {
       amount: product.price,
       itemName: product.title,
       duration: null,
+      checkoutMeta: null,
     };
   }
 
-  throw new Error("Invalid itemType. Use PACKAGE or DIGITAL_PRODUCT");
+  if (itemType === "SERVICE") {
+    const service = await prisma.service.findFirst({
+      where: { id: itemId, isActive: true },
+    });
+    if (!service) throw new Error("Service not found or inactive");
+    if (!service.price || service.price <= 0) {
+      throw new Error("This service is not priced yet. Ask admin to set a price.");
+    }
+
+    return {
+      amount: service.price,
+      itemName: service.name,
+      duration: null,
+      checkoutMeta: buildCheckoutMeta(data),
+    };
+  }
+
+  throw new Error("Invalid itemType. Use PACKAGE, DIGITAL_PRODUCT or SERVICE");
+};
+
+const paidOrderMessage = (subscription, serviceBooking, dummy) => {
+  const prefix = dummy ? "Dummy payment successful." : "Payment successful.";
+  if (subscription) {
+    return dummy
+      ? "Dummy payment successful. Package is waiting for admin to assign a doctor."
+      : "Payment successful. Admin will assign a doctor to your package.";
+  }
+  if (serviceBooking) {
+    return `${prefix} A doctor has been assigned to your service.`;
+  }
+  return dummy ? "Dummy payment successful. Product unlocked." : "Payment successful! You now have access to your purchase.";
 };
 
 const fulfillPaidOrder = async (order) => {
@@ -76,15 +109,20 @@ const fulfillPaidOrder = async (order) => {
       where: { id: order.itemId },
       data: { totalSales: { increment: 1 } },
     });
-    return { subscription: null };
+    return { subscription: null, serviceBooking: null };
   }
 
   if (order.itemType === "PACKAGE") {
     const subscription = await createSubscriptionFromOrder(order);
-    return { subscription };
+    return { subscription, serviceBooking: null };
   }
 
-  return { subscription: null };
+  if (order.itemType === "SERVICE") {
+    const serviceBooking = await fulfillServiceOrder(order);
+    return { subscription: null, serviceBooking };
+  }
+
+  return { subscription: null, serviceBooking: null };
 };
 
 const createOrder = async (patientId, data) => {
@@ -113,6 +151,7 @@ const createOrder = async (patientId, data) => {
       duration: quote.duration,
       status: "PENDING",
       razorpayOrderId: razorpayOrder.id,
+      checkoutMeta: quote.checkoutMeta || undefined,
     },
   });
 
@@ -167,7 +206,7 @@ const verifyPayment = async (patientId, data) => {
     },
   });
 
-  const { subscription } = await fulfillPaidOrder(updatedOrder);
+  const { subscription, serviceBooking } = await fulfillPaidOrder(updatedOrder);
 
   return {
     success: true,
@@ -178,9 +217,8 @@ const verifyPayment = async (patientId, data) => {
     amount: updatedOrder.amount,
     paidAt: updatedOrder.paidAt,
     subscription: subscription || null,
-    message: subscription
-      ? "Payment successful. Admin will assign a doctor to your package."
-      : "Payment successful! You now have access to your purchase.",
+    serviceBooking: serviceBooking || null,
+    message: paidOrderMessage(subscription, serviceBooking, false),
   };
 };
 
@@ -202,10 +240,11 @@ const dummyCheckout = async (patientId, data) => {
       razorpayOrderId: `dummy_order_${stamp}`,
       razorpayPaymentId: `dummy_pay_${stamp}`,
       paidAt: new Date(),
+      checkoutMeta: quote.checkoutMeta || undefined,
     },
   });
 
-  const { subscription } = await fulfillPaidOrder(order);
+  const { subscription, serviceBooking } = await fulfillPaidOrder(order);
 
   return {
     dummy: true,
@@ -216,9 +255,8 @@ const dummyCheckout = async (patientId, data) => {
     currency: order.currency,
     paidAt: order.paidAt,
     subscription: subscription || null,
-    message: subscription
-      ? "Dummy payment successful. Package is waiting for admin to assign a doctor."
-      : "Dummy payment successful. Product unlocked.",
+    serviceBooking: serviceBooking || null,
+    message: paidOrderMessage(subscription, serviceBooking, true),
   };
 };
 

@@ -12,6 +12,12 @@ const {
 } = require("./appointments/patient-appointments.controller");
 const { getPackages, getPackageById } = require("./packages/patient-packages.controller");
 const { getDigitalProducts, getDigitalProductById, getMyLibrary } = require("./digital-products/patient-digital-products.controller");
+const {
+  getServices,
+  getServiceById,
+  getMyBookings,
+  getMyBookingById,
+} = require("./services/patient-services.controller");
 const { createOrder, verifyPayment, dummyCheckout, getMyOrders } = require("./payments/payments.controller");
 const { getMySubscriptions, getActiveSubscription } = require("./subscriptions/subscriptions.controller");
 const { getMyDietPlan } = require("./diet-plans/diet-plans.controller");
@@ -43,6 +49,12 @@ router.get("/subscriptions", authMiddleware, patientMiddleware, getMySubscriptio
 
 // ─── Diet Plan ────────────────────────────────────────────────────────────────
 router.get("/diet-plan", authMiddleware, patientMiddleware, getMyDietPlan);
+
+// ─── Services ─────────────────────────────────────────────────────────────────
+router.get("/services", authMiddleware, patientMiddleware, getServices);
+router.get("/services/:id", authMiddleware, patientMiddleware, getServiceById);
+router.get("/service-bookings", authMiddleware, patientMiddleware, getMyBookings);
+router.get("/service-bookings/:id", authMiddleware, patientMiddleware, getMyBookingById);
 
 // ─── Digital Products ─────────────────────────────────────────────────────────
 router.get("/library", authMiddleware, patientMiddleware, getMyLibrary);

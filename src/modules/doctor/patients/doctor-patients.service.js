@@ -6,7 +6,7 @@ const getMyPatients = async (doctorId, query) => {
   const limit = Number(query.limit) || 10;
   const skip = (page - 1) * limit;
 
-  const [appointmentGroups, assignedSubs] = await Promise.all([
+  const [appointmentGroups, assignedSubs, serviceBookings] = await Promise.all([
     prisma.appointment.groupBy({
       by: ["patientId"],
       where: { doctorId },
@@ -15,11 +15,16 @@ const getMyPatients = async (doctorId, query) => {
       where: { doctorId, status: { in: ["PENDING_ASSIGNMENT", "ACTIVE"] } },
       select: { patientId: true },
     }),
+    prisma.serviceBooking.findMany({
+      where: { doctorId, status: { not: "CANCELLED" } },
+      select: { patientId: true },
+    }),
   ]);
 
   const patientIds = [...new Set([
     ...appointmentGroups.map((g) => g.patientId),
     ...assignedSubs.map((s) => s.patientId),
+    ...serviceBookings.map((s) => s.patientId),
   ])];
 
   if (patientIds.length === 0) {

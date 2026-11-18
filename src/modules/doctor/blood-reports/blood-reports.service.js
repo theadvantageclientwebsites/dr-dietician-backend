@@ -1,7 +1,7 @@
 const prisma = require("../../../lib/prisma");
 
 const assertDoctorCanAccessPatient = async (doctorId, patientId) => {
-  const [hasAppointment, hasPackage] = await Promise.all([
+  const [hasAppointment, hasPackage, hasService] = await Promise.all([
     prisma.appointment.findFirst({
       where: { doctorId, patientId },
       select: { id: true },
@@ -14,9 +14,17 @@ const assertDoctorCanAccessPatient = async (doctorId, patientId) => {
       },
       select: { id: true },
     }),
+    prisma.serviceBooking.findFirst({
+      where: {
+        doctorId,
+        patientId,
+        status: { not: "CANCELLED" },
+      },
+      select: { id: true },
+    }),
   ]);
 
-  if (!hasAppointment && !hasPackage) {
+  if (!hasAppointment && !hasPackage && !hasService) {
     throw new Error("Patient not found or not associated with you");
   }
 };

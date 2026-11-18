@@ -3,12 +3,13 @@ const { withRescheduleInfo, patientAppointmentSelect } = require("../appointment
 const { withMeetingUsage } = require("../subscriptions/subscriptions.service");
 const { getMyDietPlan } = require("../diet-plans/diet-plans.service");
 const { getMyLibrary } = require("../digital-products/patient-digital-products.service");
+const { getMyBookings } = require("../services/patient-services.service");
 
 const getPatientDashboard = async (patientId) => {
   const today = new Date();
 
   // Run all queries in parallel for performance
-  const [patient, upcomingAppointment, totalAppointments, activePackagesCount, digitalProductsCount, activeSubscription] =
+  const [patient, upcomingAppointment, totalAppointments, activePackagesCount, digitalProductsCount, activeServicesCount, activeSubscription] =
     await Promise.all([
       // 1. Patient profile + vitals
       prisma.user.findUnique({
@@ -68,6 +69,10 @@ const getPatientDashboard = async (patientId) => {
       // 5. Published digital products count
       prisma.digitalProduct.count({
         where: { status: "PUBLISHED" },
+      }),
+
+      prisma.service.count({
+        where: { isActive: true },
       }),
 
       prisma.subscription.findFirst({
@@ -175,10 +180,12 @@ const getPatientDashboard = async (patientId) => {
     quickActions: {
       availablePackages: activePackagesCount,
       availableDigitalProducts: digitalProductsCount,
+      availableServices: activeServicesCount,
     },
     activePackage: activeSubscription ? await withMeetingUsage(activeSubscription) : null,
     dietPlan: await getMyDietPlan(patientId),
     library: await getMyLibrary(patientId, { page: 1, limit: 4 }),
+    serviceBookings: await getMyBookings(patientId, { page: 1, limit: 4 }),
     recentActivity: [],
   };
 };

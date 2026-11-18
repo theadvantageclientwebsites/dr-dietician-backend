@@ -618,4 +618,61 @@
  *     responses:
  *       200:
  *         description: Submitted
+ *
+ * /doctor/service-bookings:
+ *   get:
+ *     tags: [Doctor - Services]
+ *     summary: My assigned service bookings
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Consults waiting for a time + lab analysis jobs
+ *
+ * /doctor/service-bookings/{id}/schedule:
+ *   patch:
+ *     tags: [Doctor - Services]
+ *     summary: Set or change consult date/time
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [dateTime]
+ *             properties:
+ *               dateTime: { type: string, example: "2026-08-20T10:00:00.000Z" }
+ *               type: { type: string, enum: [ONLINE, IN_PERSON] }
+ *     responses:
+ *       200:
+ *         description: Scheduled
+ *
+ * /doctor/service-bookings/{id}/complete:
+ *   patch:
+ *     tags: [Doctor - Services]
+ *     summary: Complete a service (lab notes required for lab analysis)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               doctorNotes: { type: string }
+ *     responses:
+ *       200:
+ *         description: Completed
  */
