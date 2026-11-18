@@ -1,86 +1,99 @@
-# DrDiet Admin API — Complete Reference
+# Admin Panel — Frontend API Reference
 
-## Base URL
-```
-https://dr-dietician-backend.onrender.com/api
-```
+> **Base URL (Production):** `https://dr-dietician-backend.onrender.com/api`
+> **Base URL (Local):** `http://localhost:5000/api`
+> **Swagger UI:** `/api/docs`
 
 ## Authentication
-All admin endpoints require:
-```http
-Authorization: Bearer <admin_token>
-Content-Type: application/json
-```
 
-Get admin token:
 ```http
 POST /auth/login
+Content-Type: application/json
+
 { "email": "admin@drdiettherapy.com", "password": "12345678" }
+```
+
+All admin requests need:
+```
+Authorization: Bearer <token>
+Content-Type: application/json
 ```
 
 ---
 
 ## Quick Reference — All Admin Endpoints
 
-| # | Method | Endpoint | Description |
-|---|--------|----------|-------------|
-| 1 | GET | `/admin/dashboard/summary` | Dashboard summary |
-| 2 | POST | `/admin/patients` | Create patient |
-| 3 | GET | `/admin/patients` | Get all patients |
-| 4 | GET | `/admin/patients/:id` | Get single patient |
-| 5 | PUT | `/admin/patients/:id` | Update patient |
-| 6 | DELETE | `/admin/patients/:id` | Delete patient |
-| 7 | POST | `/admin/doctors` | Create doctor |
-| 8 | GET | `/admin/doctors` | Get all doctors |
-| 9 | GET | `/admin/doctors/:id` | Get single doctor |
-| 10 | PUT | `/admin/doctors/:id` | Update doctor |
-| 11 | PATCH | `/admin/doctors/:id/approve` | Approve doctor |
-| 12 | PATCH | `/admin/doctors/:id/status` | Enable/disable doctor |
-| 13 | DELETE | `/admin/doctors/:id` | Delete doctor |
-| 14 | POST | `/admin/interns` | Create intern |
-| 15 | GET | `/admin/interns/summary` | Interns summary stats |
-| 16 | GET | `/admin/interns` | Get all interns |
-| 17 | GET | `/admin/interns/:id` | Get single intern |
-| 18 | PUT | `/admin/interns/:id` | Update intern |
-| 19 | DELETE | `/admin/interns/:id` | Delete intern |
-| 20 | GET | `/admin/appointments/summary` | Appointments summary |
-| 21 | GET | `/admin/appointments` | Get all appointments |
-| 22 | GET | `/admin/appointments/:id` | Get single appointment |
-| 23 | PATCH | `/admin/appointments/:id/status` | Update appointment status |
-| 24 | DELETE | `/admin/appointments/:id` | Delete appointment |
-| 25 | POST | `/admin/packages` | Create package |
-| 26 | GET | `/admin/packages` | Get all packages |
-| 27 | GET | `/admin/packages/:id` | Get single package |
-| 28 | PUT | `/admin/packages/:id` | Update package |
-| 29 | PATCH | `/admin/packages/:id/status` | Toggle package active/inactive |
-| 30 | DELETE | `/admin/packages/:id` | Delete package |
-| 31 | POST | `/admin/digital-products` | Create digital product |
-| 32 | GET | `/admin/digital-products` | Get all digital products |
-| 33 | GET | `/admin/digital-products/:id` | Get single digital product |
-| 34 | PUT | `/admin/digital-products/:id` | Update digital product |
-| 35 | PATCH | `/admin/digital-products/:id/status` | Change product status |
-| 36 | DELETE | `/admin/digital-products/:id` | Delete digital product |
-| 37 | POST | `/admin/courses` | Create course |
-| 38 | GET | `/admin/courses` | Get all courses |
-| 39 | GET | `/admin/courses/:id` | Get course with lessons |
-| 40 | PUT | `/admin/courses/:id` | Update course |
-| 41 | DELETE | `/admin/courses/:id` | Delete course |
-| 42 | POST | `/admin/courses/:courseId/lessons` | Add lesson to course |
-| 43 | PUT | `/admin/courses/lessons/:lessonId` | Update lesson |
-| 44 | DELETE | `/admin/courses/lessons/:lessonId` | Delete lesson |
-| 45 | GET | `/admin/courses/:courseId/enrollments` | View course enrollments |
-| 46 | GET | `/admin/revenue/summary` | Revenue dashboard |
-| 47 | GET | `/admin/revenue/orders` | All orders |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/admin/dashboard/summary` | Dashboard summary stats |
+| POST | `/admin/patients` | Create patient |
+| GET | `/admin/patients` | List patients |
+| GET | `/admin/patients/:id` | Single patient |
+| PUT | `/admin/patients/:id` | Update patient |
+| DELETE | `/admin/patients/:id` | Delete patient |
+| POST | `/admin/doctors` | Create doctor |
+| GET | `/admin/doctors` | List doctors |
+| GET | `/admin/doctors/:id` | Single doctor |
+| PUT | `/admin/doctors/:id` | Update doctor |
+| PATCH | `/admin/doctors/:id/approve` | Approve doctor |
+| PATCH | `/admin/doctors/:id/status` | Enable / disable doctor |
+| DELETE | `/admin/doctors/:id` | Delete doctor |
+| GET | `/admin/interns/summary` | Interns summary stats |
+| POST | `/admin/interns` | Create intern |
+| GET | `/admin/interns` | List interns |
+| GET | `/admin/interns/:id` | Single intern |
+| PUT | `/admin/interns/:id` | Update intern |
+| DELETE | `/admin/interns/:id` | Delete intern |
+| GET | `/admin/appointments/summary` | Appointments summary |
+| GET | `/admin/appointments` | List appointments |
+| GET | `/admin/appointments/:id` | Single appointment |
+| PATCH | `/admin/appointments/:id/status` | Update appointment status |
+| DELETE | `/admin/appointments/:id` | Delete appointment |
+| POST | `/admin/packages` | Create package |
+| GET | `/admin/packages` | List packages |
+| GET | `/admin/packages/:id` | Single package |
+| PUT | `/admin/packages/:id` | Update package |
+| PATCH | `/admin/packages/:id/status` | Toggle active/inactive |
+| DELETE | `/admin/packages/:id` | Delete package |
+| GET | `/admin/subscriptions` | List package subscriptions |
+| GET | `/admin/subscriptions/:id` | Single subscription |
+| PATCH | `/admin/subscriptions/:id/assign-doctor` | Assign doctor to subscription |
+| GET | `/admin/diet-plans` | List diet plans |
+| GET | `/admin/diet-plans/:id` | Single diet plan |
+| PATCH | `/admin/diet-plans/:id/approve` | Approve diet plan |
+| PATCH | `/admin/diet-plans/:id/reject` | Reject diet plan |
+| POST | `/admin/services` | Create service |
+| GET | `/admin/services` | List services |
+| GET | `/admin/services/:id` | Single service |
+| PUT | `/admin/services/:id` | Update service (price, name, etc.) |
+| PATCH | `/admin/services/:id/status` | Toggle active/inactive |
+| DELETE | `/admin/services/:id` | Delete service |
+| GET | `/admin/services/bookings` | List service bookings |
+| GET | `/admin/services/bookings/:id` | Single service booking |
+| PATCH | `/admin/services/bookings/:id/assign-doctor` | Reassign doctor |
+| POST | `/admin/digital-products` | Create digital product |
+| GET | `/admin/digital-products` | List digital products |
+| GET | `/admin/digital-products/:id` | Single product |
+| PUT | `/admin/digital-products/:id` | Update product |
+| PATCH | `/admin/digital-products/:id/status` | Change publish status |
+| DELETE | `/admin/digital-products/:id` | Delete product |
+| POST | `/admin/courses` | Create course |
+| GET | `/admin/courses` | List courses |
+| GET | `/admin/courses/:id` | Course with all lessons |
+| PUT | `/admin/courses/:id` | Update course |
+| DELETE | `/admin/courses/:id` | Delete course |
+| POST | `/admin/courses/:courseId/lessons` | Add lesson |
+| PUT | `/admin/courses/lessons/:lessonId` | Update lesson |
+| DELETE | `/admin/courses/lessons/:lessonId` | Delete lesson |
+| GET | `/admin/courses/:courseId/enrollments` | View enrolled interns |
+| GET | `/admin/revenue/summary` | Revenue dashboard |
+| GET | `/admin/revenue/orders` | All orders |
 
 ---
 
-# 1. DASHBOARD
+## 1. Dashboard
 
-## GET /admin/dashboard/summary
-
-```http
-GET https://dr-dietician-backend.onrender.com/api/admin/dashboard/summary
-```
+### GET `/admin/dashboard/summary`
 
 **Response:**
 ```json
@@ -97,12 +110,14 @@ GET https://dr-dietician-backend.onrender.com/api/admin/dashboard/summary
 
 ---
 
-# 2. PATIENTS
+## 2. Patients
 
-## POST /admin/patients — Create Patient
+### POST `/admin/patients`
 
+Password is auto-generated — share it with the patient.
+
+**Request Body:**
 ```json
-// Request Body (password auto-generated)
 {
   "fullName": "Sarah Jenkins",
   "email": "sarah@example.com",
@@ -117,29 +132,34 @@ GET https://dr-dietician-backend.onrender.com/api/admin/dashboard/summary
   "socialHandle": "@sarah",
   "isDefencePersonnel": false
 }
-
-// Response includes generatedPassword — share with patient!
 ```
 
-## GET /admin/patients — List with Filters
+**Response includes `generatedPassword` — show it once and tell admin to share it.**
 
-```
-?page=1&limit=10
-?search=john               (name, email, phone)
-?status=ACTIVE             (ACTIVE | INACTIVE | SUSPENDED | PENDING_APPROVAL)
-?bloodGroup=A_POS          (A_POS | A_NEG | B_POS | B_NEG | AB_POS | AB_NEG | O_POS | O_NEG)
-?gender=MALE               (MALE | FEMALE | OTHER | PREFER_NOT_TO_SAY)
-?location=Chicago
-?isDefencePersonnel=true
-?minAge=18&maxAge=45
-```
+---
 
-## GET /admin/patients/:id — Single Patient
+### GET `/admin/patients`
 
-## PUT /admin/patients/:id — Update Patient
+**Query Params:**
+
+| Param | Description |
+|---|---|
+| `search` | Name, email, or phone |
+| `status` | `ACTIVE` \| `INACTIVE` \| `SUSPENDED` \| `PENDING_APPROVAL` |
+| `bloodGroup` | `A_POS` \| `A_NEG` \| `B_POS` \| `B_NEG` \| `AB_POS` \| `AB_NEG` \| `O_POS` \| `O_NEG` |
+| `gender` | `MALE` \| `FEMALE` \| `OTHER` \| `PREFER_NOT_TO_SAY` |
+| `location` | Filter by city |
+| `isDefencePersonnel` | `true` \| `false` |
+| `minAge` / `maxAge` | Age range |
+| `page` / `limit` | Pagination |
+
+---
+
+### GET `/admin/patients/:id` — Single patient
+
+### PUT `/admin/patients/:id` — Update patient
 
 ```json
-// All fields optional
 {
   "fullName": "Sarah Updated",
   "email": "new@email.com",
@@ -154,13 +174,13 @@ GET https://dr-dietician-backend.onrender.com/api/admin/dashboard/summary
 }
 ```
 
-## DELETE /admin/patients/:id — Delete Patient
+### DELETE `/admin/patients/:id`
 
 ---
 
-# 3. DOCTORS
+## 3. Doctors
 
-## POST /admin/doctors — Create Doctor
+### POST `/admin/doctors`
 
 ```json
 {
@@ -174,56 +194,50 @@ GET https://dr-dietician-backend.onrender.com/api/admin/dashboard/summary
   "hospitalName": "City Hospital",
   "clinicAddress": "123 Main Street"
 }
-// Response includes generatedPassword!
 ```
 
-## GET /admin/doctors — List with Filters
+**Response includes `generatedPassword`.**
 
-```
-?search=smith
-?status=ACTIVE
-?isApproved=true
-?specialization=Nutrition
-?hospital=City Hospital
-?minExperience=5&maxExperience=15
-?page=1&limit=10
-```
+---
 
-## GET /admin/doctors/:id — Single Doctor
+### GET `/admin/doctors`
 
-## PUT /admin/doctors/:id — Update Doctor
+**Query Params:** `search`, `status`, `isApproved` (`true`/`false`), `specialization`, `hospital`, `minExperience`, `maxExperience`, `page`, `limit`
+
+---
+
+### GET `/admin/doctors/:id` — Single doctor
+
+### PUT `/admin/doctors/:id` — Update doctor
 
 ```json
 {
-  "fullName": "Dr. Updated Name",
+  "fullName": "Dr. Updated",
   "accountStatus": "ACTIVE",
   "doctorProfile": {
     "specialization": "Clinical Nutrition",
-    "yearsOfExperience": 10,
-    "isApproved": true
+    "yearsOfExperience": 10
   }
 }
 ```
 
-## PATCH /admin/doctors/:id/approve — Approve Doctor
+### PATCH `/admin/doctors/:id/approve` — No request body needed
 
-No request body needed.
-
-## PATCH /admin/doctors/:id/status — Enable/Disable
+### PATCH `/admin/doctors/:id/status`
 
 ```json
-{ "status": "ACTIVE" }      // Enable
-{ "status": "INACTIVE" }    // Disable
-{ "status": "SUSPENDED" }   // Suspend
+{ "status": "ACTIVE" }
+{ "status": "INACTIVE" }
+{ "status": "SUSPENDED" }
 ```
 
-## DELETE /admin/doctors/:id — Delete Doctor
+### DELETE `/admin/doctors/:id`
 
 ---
 
-# 4. INTERNS
+## 4. Interns
 
-## GET /admin/interns/summary — Summary Stats
+### GET `/admin/interns/summary`
 
 ```json
 {
@@ -236,7 +250,7 @@ No request body needed.
 }
 ```
 
-## POST /admin/interns — Create Intern
+### POST `/admin/interns`
 
 ```json
 {
@@ -248,45 +262,33 @@ No request body needed.
   "semester": 4,
   "year": 2023
 }
-// Response includes generatedPassword!
 ```
 
-## GET /admin/interns — List with Filters
+**Response includes `generatedPassword`.**
 
-```
-?search=neha
-?status=ACTIVE
-?isApproved=true
-?university=AIIMS
-?specialization=Dietetics
-?semester=4
-?year=2023
-?minSemester=3&maxSemester=6
-?page=1&limit=10
-```
+### GET `/admin/interns`
 
-## GET /admin/interns/:id — Single Intern
+**Query Params:** `search`, `status`, `isApproved`, `university`, `specialization`, `semester`, `year`, `minSemester`, `maxSemester`, `page`, `limit`
 
-## PUT /admin/interns/:id — Update Intern
+### GET `/admin/interns/:id` — Single intern
+
+### PUT `/admin/interns/:id`
 
 ```json
 {
   "fullName": "Jane Updated",
   "accountStatus": "ACTIVE",
-  "internProfile": {
-    "semester": 5,
-    "isApproved": true
-  }
+  "internProfile": { "semester": 5, "isApproved": true }
 }
 ```
 
-## DELETE /admin/interns/:id — Delete Intern
+### DELETE `/admin/interns/:id`
 
 ---
 
-# 5. APPOINTMENTS
+## 5. Appointments
 
-## GET /admin/appointments/summary — Summary Stats
+### GET `/admin/appointments/summary`
 
 ```json
 {
@@ -301,22 +303,13 @@ No request body needed.
 }
 ```
 
-## GET /admin/appointments — List with Filters
+### GET `/admin/appointments`
 
-```
-?status=CONFIRMED          (PENDING | CONFIRMED | COMPLETED | CANCELLED)
-?type=ONLINE               (ONLINE | IN_PERSON)
-?search=john               (patient or doctor name)
-?doctorId=doctor_id
-?patientId=patient_id
-?today=true
-?fromDate=2026-07-01&toDate=2026-07-31
-?page=1&limit=10
-```
+**Query Params:** `status`, `type`, `search` (patient or doctor name), `doctorId`, `patientId`, `today` (`true`), `fromDate`, `toDate`, `page`, `limit`
 
-## GET /admin/appointments/:id — Single Appointment
+### GET `/admin/appointments/:id` — Single appointment
 
-## PATCH /admin/appointments/:id/status — Update Status
+### PATCH `/admin/appointments/:id/status`
 
 ```json
 { "status": "CONFIRMED" }
@@ -324,13 +317,13 @@ No request body needed.
 { "status": "CANCELLED" }
 ```
 
-## DELETE /admin/appointments/:id — Delete Appointment
+### DELETE `/admin/appointments/:id`
 
 ---
 
-# 6. PACKAGES
+## 6. Packages
 
-## POST /admin/packages — Create Package
+### POST `/admin/packages`
 
 ```json
 {
@@ -345,43 +338,324 @@ No request body needed.
 }
 ```
 
-## GET /admin/packages — List with Filters
+### GET `/admin/packages`
 
-```
-?search=thyroid
-?category=Diabetes
-?isActive=true
-?page=1&limit=10
-```
+**Query Params:** `search`, `category`, `isActive`, `page`, `limit`
 
-## GET /admin/packages/:id — Single Package
+### GET `/admin/packages/:id` — Single package
 
-## PUT /admin/packages/:id — Update Package
+### PUT `/admin/packages/:id` — Update (all fields optional)
 
-All fields optional — partial update.
-
-## PATCH /admin/packages/:id/status — Toggle Active
+### PATCH `/admin/packages/:id/status`
 
 ```json
-{ "isActive": false }   // Deactivate
-{ "isActive": true }    // Activate
+{ "isActive": false }
+{ "isActive": true }
 ```
 
-## DELETE /admin/packages/:id — Delete Package
+### DELETE `/admin/packages/:id`
 
 ---
 
-# 7. DIGITAL PRODUCTS
+## 7. Subscriptions (Package Purchases)
 
-## Upload Flow (do this first)
+A subscription is created when a patient buys a package. Admin must assign a doctor before the patient's diet plan can be prepared.
+
+### GET `/admin/subscriptions`
+
+**Query Params:**
+
+| Param | Description |
+|---|---|
+| `status` | `PENDING_ASSIGNMENT` \| `ACTIVE` \| `EXPIRED` \| `CANCELLED` |
+| `packageId` | Filter by package |
+| `doctorId` | Filter by assigned doctor |
+| `search` | Patient name, email, or package name |
+| `page` / `limit` | Pagination |
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "sub_id",
+        "status": "PENDING_ASSIGNMENT",
+        "duration": "THREE_MONTHS",
+        "paidAmount": 5499,
+        "assignedAt": null,
+        "endsAt": "2026-11-13T00:00:00.000Z",
+        "createdAt": "2026-08-13T10:00:00.000Z",
+        "patient": {
+          "id": "patient_id",
+          "fullName": "John Doe",
+          "email": "john@example.com",
+          "profilePhotoUrl": null,
+          "patientProfile": { "phoneNumber": "9876543210", "age": 25, "gender": "MALE" }
+        },
+        "package": { "id": "pkg_id", "name": "Thyroid Management", "category": "Thyroid" },
+        "doctor": null
+      }
+    ],
+    "pagination": { "page": 1, "limit": 10, "totalItems": 5, "totalPages": 1 }
+  }
+}
+```
+
+---
+
+### GET `/admin/subscriptions/:id` — Single subscription with full patient details
+
+---
+
+### PATCH `/admin/subscriptions/:id/assign-doctor`
+
+Assigns a doctor and activates the subscription. This triggers the diet plan countdown (doctor has 24 hours to submit).
+
+**Request Body:**
+```json
+{ "doctorId": "doctor_id" }
+```
+
+**Response:** Updated subscription with `status: "ACTIVE"` and `assignedAt` set.
+
+**Errors:**
+- `400` — doctorId is required
+- `400` — Doctor is not approved yet
+- `400` — Cannot assign to a cancelled / expired package
+
+---
+
+## 8. Diet Plans
+
+Admin approves or rejects diet plans submitted by doctors. Patients can only see their plan after admin approves.
+
+### GET `/admin/diet-plans`
+
+**Query Params:**
+
+| Param | Description |
+|---|---|
+| `status` | `DRAFT` \| `PENDING_APPROVAL` \| `APPROVED` \| `REJECTED` |
+| `doctorId` | Filter by doctor |
+| `patientId` | Filter by patient |
+| `search` | Patient or doctor name |
+| `page` / `limit` | Pagination |
+
+> Use `status=PENDING_APPROVAL` for the approval queue.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "plan_id",
+        "duration": "SEVEN_DAYS",
+        "durationDays": 7,
+        "calorieTarget": 1800,
+        "foodsToEat": ["Oats", "Brown rice"],
+        "foodsToAvoid": ["Refined sugar"],
+        "breakfast": { "time": "8:00 AM", "items": ["Oatmeal"], "calories": 350 },
+        "lunch": { "time": "1:00 PM", "items": ["Brown rice", "Dal"], "calories": 600 },
+        "dinner": { "time": "7:30 PM", "items": ["Roti", "Sabzi"], "calories": 500 },
+        "snacks": { "morning": ["Almonds"], "evening": ["Fruit"] },
+        "notes": "Avoid eating after 8 PM",
+        "status": "PENDING_APPROVAL",
+        "submittedAt": "2026-08-13T11:00:00.000Z",
+        "approvedAt": null,
+        "rejectedAt": null,
+        "rejectionReason": null,
+        "dueAt": "2026-08-14T10:00:00.000Z",
+        "isOverdue": false,
+        "patient": { "id": "patient_id", "fullName": "John Doe", "email": "john@example.com" },
+        "doctor": { "id": "doctor_id", "fullName": "Dr. John Smith", "doctorProfile": { "specialization": "Nutrition" } },
+        "subscription": {
+          "id": "sub_id",
+          "status": "ACTIVE",
+          "assignedAt": "2026-08-13T10:00:00.000Z",
+          "endsAt": "2026-11-13T00:00:00.000Z",
+          "package": { "name": "Thyroid Management", "category": "Thyroid" }
+        }
+      }
+    ],
+    "pagination": { "page": 1, "limit": 10, "totalItems": 3, "totalPages": 1 }
+  }
+}
+```
+
+---
+
+### GET `/admin/diet-plans/:id` — Single plan (same shape)
+
+---
+
+### PATCH `/admin/diet-plans/:id/approve`
+
+No request body needed. Patient will immediately be able to see the plan.
+
+**Response:** Plan with `status: "APPROVED"` and `approvedAt` set.
+
+---
+
+### PATCH `/admin/diet-plans/:id/reject`
+
+Doctor can edit and resubmit after rejection.
+
+**Request Body:**
+```json
+{ "reason": "Calorie target is too low for this patient's weight. Please revise." }
+```
+
+> `reason` optional — defaults to "Please update the plan".
+
+**Response:** Plan with `status: "REJECTED"` and `rejectionReason` set.
+
+---
+
+## 9. Services
+
+Two service types: `ONE_ON_ONE_CONSULTATION` (60 min, ₹799) and `LAB_REPORT_ANALYSIS` (₹499). These are pre-seeded — admin can update prices here.
+
+### POST `/admin/services`
+
+```json
+{
+  "type": "ONE_ON_ONE_CONSULTATION",
+  "name": "One-on-One Diet Consultation",
+  "description": "60-minute 1:1 consultation with a dietitian",
+  "price": 799,
+  "durationMinutes": 60
+}
+```
+
+> `type`, `name`, `price` required. Types: `ONE_ON_ONE_CONSULTATION` | `LAB_REPORT_ANALYSIS`
+
+---
+
+### GET `/admin/services`
+
+**Query Params:** `type`, `isActive`, `search`, `page`, `limit`
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "service_id",
+        "type": "ONE_ON_ONE_CONSULTATION",
+        "name": "One-on-One Diet Consultation",
+        "description": "...",
+        "price": 799,
+        "durationMinutes": 60,
+        "isActive": true
+      }
+    ],
+    "pagination": { "page": 1, "limit": 10, "totalItems": 2, "totalPages": 1 }
+  }
+}
+```
+
+---
+
+### GET `/admin/services/:id` — Single service
+
+### PUT `/admin/services/:id` — Update service (price, name, description, durationMinutes)
+
+```json
+{
+  "price": 999,
+  "name": "Premium One-on-One Consultation",
+  "durationMinutes": 90
+}
+```
+
+### PATCH `/admin/services/:id/status`
+
+```json
+{ "isActive": false }
+{ "isActive": true }
+```
+
+### DELETE `/admin/services/:id`
+
+> Cannot delete if the service has existing bookings. Deactivate instead.
+
+---
+
+### GET `/admin/services/bookings`
+
+All paid service bookings across all patients.
+
+**Query Params:**
+
+| Param | Description |
+|---|---|
+| `status` | `PAID` \| `AWAITING_SCHEDULE` \| `SCHEDULED` \| `COMPLETED` \| `CANCELLED` |
+| `doctorId` | Filter by assigned doctor |
+| `patientId` | Filter by patient |
+| `type` | `ONE_ON_ONE_CONSULTATION` \| `LAB_REPORT_ANALYSIS` |
+| `page` / `limit` | Pagination |
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "items": [
+      {
+        "id": "booking_id",
+        "status": "AWAITING_SCHEDULE",
+        "patientNotes": "Prefer morning",
+        "doctorNotes": null,
+        "preferredDateTime": null,
+        "appointmentType": "ONLINE",
+        "completedAt": null,
+        "createdAt": "2026-08-13T10:00:00.000Z",
+        "service": { "id": "service_id", "type": "ONE_ON_ONE_CONSULTATION", "name": "One-on-One Diet Consultation", "price": 799 },
+        "doctor": { "id": "doctor_id", "fullName": "Dr. John Smith", "profilePhotoUrl": null },
+        "patient": { "id": "patient_id", "fullName": "John Doe", "email": "john@example.com" },
+        "appointment": { "id": "appointment_id", "dateTime": "2026-08-20T10:00:00.000Z", "type": "ONLINE", "status": "PENDING" },
+        "order": { "id": "order_id", "amount": 799, "status": "PAID", "paidAt": "2026-08-13T10:00:00.000Z" }
+      }
+    ],
+    "pagination": { "page": 1, "limit": 10, "totalItems": 5, "totalPages": 1 }
+  }
+}
+```
+
+---
+
+### GET `/admin/services/bookings/:id` — Single booking (same shape)
+
+---
+
+### PATCH `/admin/services/bookings/:id/assign-doctor`
+
+Reassign a booking to a different doctor (must be approved).
+
+**Request Body:**
+```json
+{ "doctorId": "new_doctor_id" }
+```
+
+---
+
+## 10. Digital Products
+
+### Upload Flow (do this first)
 
 ```
-1. POST /upload/digital-product/file      → returns fileUrl
-2. POST /upload/digital-product/thumbnail → returns thumbnailUrl
-3. POST /admin/digital-products           → use both URLs
+1. POST /upload/digital-product/file       → returns fileUrl (PDF, max 50MB)
+2. POST /upload/digital-product/thumbnail  → returns thumbnailUrl (image, max 5MB)
+3. POST /admin/digital-products            → use both URLs
 ```
 
-## POST /admin/digital-products — Create
+### POST `/admin/digital-products`
 
 ```json
 {
@@ -399,23 +673,15 @@ All fields optional — partial update.
 }
 ```
 
-## GET /admin/digital-products — List with Filters
+### GET `/admin/digital-products`
 
-```
-?search=thyroid
-?category=Diabetes
-?status=PUBLISHED          (DRAFT | PUBLISHED | UNPUBLISHED)
-?isFree=true
-?language=Hindi
-?minPrice=100&maxPrice=500
-?page=1&limit=10
-```
+**Query Params:** `search`, `category`, `status` (`DRAFT` | `PUBLISHED` | `UNPUBLISHED`), `isFree`, `language`, `minPrice`, `maxPrice`, `page`, `limit`
 
-## GET /admin/digital-products/:id — Single Product
+### GET `/admin/digital-products/:id` — Single product
 
-## PUT /admin/digital-products/:id — Update (all optional)
+### PUT `/admin/digital-products/:id` — Update (all optional)
 
-## PATCH /admin/digital-products/:id/status — Change Status
+### PATCH `/admin/digital-products/:id/status`
 
 ```json
 { "status": "PUBLISHED" }
@@ -423,13 +689,13 @@ All fields optional — partial update.
 { "status": "UNPUBLISHED" }
 ```
 
-## DELETE /admin/digital-products/:id — Delete
+### DELETE `/admin/digital-products/:id`
 
 ---
 
-# 8. COURSES
+## 11. Courses
 
-## POST /admin/courses — Create Course
+### POST `/admin/courses`
 
 ```json
 {
@@ -439,34 +705,25 @@ All fields optional — partial update.
   "instructor": "Dr. Smith",
   "duration": "4 weeks",
   "minSemester": 3,
-  "minYear": 2022,
+  "minYear": 2,
   "hasFinalTest": true,
   "isActive": true
 }
 ```
 
-## GET /admin/courses — List with Filters
+### GET `/admin/courses`
 
-```
-?search=nutrition
-?category=Clinical
-?isActive=true
-?hasFinalTest=true
-?page=1&limit=10
-```
+**Query Params:** `search`, `category`, `isActive`, `hasFinalTest`, `page`, `limit`
 
-**Response includes:**
-- `totalLessons` — count of lessons
-- `completedCount` — interns who completed
-- `_count.enrollments` — total enrolled interns
+**Response includes:** `totalLessons`, `_count.enrollments`
 
-## GET /admin/courses/:id — Course with All Lessons
+### GET `/admin/courses/:id` — Course with all lessons
 
-## PUT /admin/courses/:id — Update Course
+### PUT `/admin/courses/:id` — Update (all optional)
 
-## DELETE /admin/courses/:id — Delete Course (cascades lessons + enrollments)
+### DELETE `/admin/courses/:id` — Cascades lessons + enrollments
 
-## POST /admin/courses/:courseId/lessons — Add Lesson
+### POST `/admin/courses/:courseId/lessons`
 
 ```json
 {
@@ -478,43 +735,30 @@ All fields optional — partial update.
   "durationMin": 30,
   "isActive": true
 }
-// order is auto-assigned if not provided
 ```
 
-## PUT /admin/courses/lessons/:lessonId — Update Lesson
+> `order` auto-assigned if not provided.
 
-```json
-{
-  "title": "Updated Title",
-  "videoUrl": "https://youtube.com/new-link",
-  "durationMin": 35
-}
-```
+### PUT `/admin/courses/lessons/:lessonId` — Update lesson (all optional)
 
-## DELETE /admin/courses/lessons/:lessonId — Delete Lesson
+### DELETE `/admin/courses/lessons/:lessonId` — Auto-decrements `totalLessons`
 
-Auto-decrements `totalLessons` on the course.
+### GET `/admin/courses/:courseId/enrollments`
 
-## GET /admin/courses/:courseId/enrollments — View Enrolled Interns
+**Query Params:** `status` (`ENROLLED` | `IN_PROGRESS` | `COMPLETED` | `FAILED`), `page`, `limit`
 
-```
-?status=IN_PROGRESS        (ENROLLED | IN_PROGRESS | COMPLETED | FAILED)
-?page=1&limit=10
-```
-
-**Response includes:**
-- Intern profile details
-- Per-lesson completion status
-- Overall progress percentage
+**Response includes:** Intern profile + per-lesson completion + overall progress %
 
 ---
 
-# 9. REVENUE
+## 12. Revenue
 
-## GET /admin/revenue/summary — Revenue Dashboard
+### GET `/admin/revenue/summary`
 
+**Response:**
 ```json
 {
+  "success": true,
   "data": {
     "summary": {
       "totalRevenue": 124500,
@@ -524,78 +768,93 @@ Auto-decrements `totalLessons` on the course.
     },
     "breakdown": {
       "packages": { "revenue": 68000, "percentage": 54.6 },
-      "digitalProducts": { "revenue": 32000, "percentage": 25.7 }
+      "digitalProducts": { "revenue": 32000, "percentage": 25.7 },
+      "services": { "revenue": 24500, "percentage": 19.7 }
     },
     "recentTransactions": [
       {
         "id": "order_id",
         "itemType": "PACKAGE",
-        "itemName": "Thyroid Management - 1 Month",
-        "amount": 1299,
-        "paidAt": "2026-07-18T10:00:00.000Z",
-        "patient": {
-          "fullName": "Sarah Jenkins",
-          "email": "sarah@example.com"
-        }
+        "itemName": "Thyroid Management - 3 Months",
+        "amount": 5499,
+        "paidAt": "2026-08-13T10:00:00.000Z",
+        "patient": { "fullName": "Sarah Jenkins", "email": "sarah@example.com" }
       }
     ]
   }
 }
 ```
 
-## GET /admin/revenue/orders — All Transactions
+### GET `/admin/revenue/orders`
 
-```
-?status=PAID               (PENDING | PAID | FAILED | REFUNDED)
-?itemType=PACKAGE          (PACKAGE | DIGITAL_PRODUCT)
-?fromDate=2026-07-01&toDate=2026-07-31
-?page=1&limit=10
-```
+**Query Params:** `status` (`PENDING` | `PAID` | `FAILED` | `REFUNDED`), `itemType` (`PACKAGE` | `DIGITAL_PRODUCT` | `SERVICE`), `fromDate`, `toDate`, `page`, `limit`
 
 ---
 
-# ENUM REFERENCE
+## Enum Reference
 
-## Account Status
-| Value | Description |
-|-------|-------------|
-| `ACTIVE` | Account is active |
-| `INACTIVE` | Account disabled |
-| `SUSPENDED` | Account suspended |
-| `PENDING_APPROVAL` | Awaiting admin approval |
+### Account Status
+`ACTIVE` | `INACTIVE` | `SUSPENDED` | `PENDING_APPROVAL`
 
-## Blood Group
-`A_POS` `A_NEG` `B_POS` `B_NEG` `AB_POS` `AB_NEG` `O_POS` `O_NEG`
+### Gender
+`MALE` | `FEMALE` | `OTHER` | `PREFER_NOT_TO_SAY`
 
-## Gender
-`MALE` `FEMALE` `OTHER` `PREFER_NOT_TO_SAY`
+### Blood Group
+`A_POS` | `A_NEG` | `B_POS` | `B_NEG` | `AB_POS` | `AB_NEG` | `O_POS` | `O_NEG`
 
-## Appointment Status
-`PENDING` `CONFIRMED` `COMPLETED` `CANCELLED`
+### Appointment Status
+`PENDING` | `CONFIRMED` | `COMPLETED` | `CANCELLED`
 
-## Appointment Type
-`ONLINE` `IN_PERSON`
+### Appointment Type
+`ONLINE` | `IN_PERSON`
 
-## Digital Product Status
-`DRAFT` `PUBLISHED` `UNPUBLISHED`
+### Subscription Status
+`PENDING_ASSIGNMENT` | `ACTIVE` | `EXPIRED` | `CANCELLED`
 
-## Enrollment Status
-`ENROLLED` `IN_PROGRESS` `COMPLETED` `FAILED`
+### Package Duration
+`ONE_MONTH` | `THREE_MONTHS` | `SIX_MONTHS`
 
-## Order Status
-`PENDING` `PAID` `FAILED` `REFUNDED`
+### Diet Plan Status
+`DRAFT` | `PENDING_APPROVAL` | `APPROVED` | `REJECTED`
 
-## Package Duration
-`ONE_MONTH` `THREE_MONTHS` `SIX_MONTHS`
+### Service Type
+`ONE_ON_ONE_CONSULTATION` | `LAB_REPORT_ANALYSIS`
+
+### Service Booking Status
+`PAID` | `AWAITING_SCHEDULE` | `SCHEDULED` | `COMPLETED` | `CANCELLED`
+
+### Digital Product Status
+`DRAFT` | `PUBLISHED` | `UNPUBLISHED`
+
+### Enrollment Status
+`ENROLLED` | `IN_PROGRESS` | `COMPLETED` | `FAILED`
+
+### Order Status
+`PENDING` | `PAID` | `FAILED` | `REFUNDED`
 
 ---
 
-# TWO WAYS TO CREATE USERS
+## Error Format
+
+```json
+{ "success": false, "message": "Error description" }
+```
+
+| Code | Meaning |
+|---|---|
+| `400` | Validation / business rule |
+| `401` | Missing or invalid token |
+| `403` | Not an admin |
+| `404` | Not found |
+| `500` | Server error |
+
+---
+
+## User Creation — Two Ways
 
 | Feature | Self-Registration | Admin Creates |
-|---------|------------------|---------------|
+|---|---|---|
 | Patient | `POST /auth/register/patient` | `POST /admin/patients` |
 | Doctor | `POST /auth/register/doctor` | `POST /admin/doctors` |
 | Intern | `POST /auth/register/intern` | `POST /admin/interns` |
-| Password | User provides | **Auto-generated** — shown in response once |
-| Status | Varies | ACTIVE (auto-approved) |
+| Password | User provides | Auto-generated — shown once in response |

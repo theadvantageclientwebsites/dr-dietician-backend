@@ -1,19 +1,29 @@
-# Intern Panel — Frontend Integration Guide
+# Intern Panel — Frontend API Reference
 
-> **Base URL:** `https://dr-dietician-backend.onrender.com/api`  
-> **Local URL:** `http://localhost:5000/api`  
-> **Auth:** All intern routes require `Authorization: Bearer <token>` header  
+> **Base URL (Production):** `https://dr-dietician-backend.onrender.com/api`
+> **Base URL (Local):** `http://localhost:5000/api`
 > **Swagger UI:** `/api/docs`
-
----
 
 ## Authentication
 
-All requests to `/intern/*` routes must include the JWT token received after login.
+Every request must include the JWT token from login:
 
 ```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Authorization: Bearer <token>
 ```
+
+---
+
+## Quick Reference — All Intern Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/intern/courses` | Browse all available courses |
+| GET | `/intern/courses/my-enrollments` | My enrolled courses |
+| POST | `/intern/courses/:courseId/enroll` | Enroll in a course |
+| GET | `/intern/courses/:courseId/progress` | Course detail with my progress |
+| PATCH | `/intern/courses/:courseId/lessons/:lessonId/complete` | Mark lesson complete |
+| PATCH | `/intern/courses/:courseId/final-test` | Submit final test result |
 
 ---
 
@@ -21,7 +31,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### GET `/intern/courses`
 
-Browse all active courses. Response includes eligibility and enrollment status for the logged-in intern.
+All active courses with eligibility and enrollment status merged for the logged-in intern.
 
 **Query Params:**
 
@@ -64,31 +74,25 @@ Browse all active courses. Response includes eligibility and enrollment status f
         "isEligible": true
       }
     ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "totalItems": 5,
-      "totalPages": 1
-    }
+    "pagination": { "page": 1, "limit": 10, "totalItems": 5, "totalPages": 1 }
   }
 }
 ```
 
 **Key fields:**
-- `isEligible` — `false` if intern's semester/year is below the course minimum. Show a lock or disabled state.
+- `isEligible` — `false` if intern's semester/year is below the minimum. Show lock/disabled state.
 - `isEnrolled` — `true` if already enrolled. Show "Continue" instead of "Enroll".
 - `enrollmentStatus` — `ENROLLED` | `IN_PROGRESS` | `COMPLETED` | `FAILED` | `null`
 - `progress` — 0–100 percentage
+- `hasFinalTest` — `true` means a final test must be passed to complete the course
 
 ---
 
-## 2. Enroll in Course
+## 2. Enroll in a Course
 
 ### POST `/intern/courses/:courseId/enroll`
 
-Enroll in a course. Automatically creates lesson progress records for every active lesson.
-
-**No request body needed.**
+No request body needed. Automatically creates progress records for every active lesson.
 
 **Response:**
 ```json
@@ -109,8 +113,8 @@ Enroll in a course. Automatically creates lesson progress records for every acti
       "totalLessons": 8
     },
     "lessonProgress": [
-      { "id": "lp_id", "lessonId": "lesson_id_1", "isCompleted": false, "completedAt": null },
-      { "id": "lp_id", "lessonId": "lesson_id_2", "isCompleted": false, "completedAt": null }
+      { "id": "lp_1", "lessonId": "lesson_id_1", "isCompleted": false, "completedAt": null },
+      { "id": "lp_2", "lessonId": "lesson_id_2", "isCompleted": false, "completedAt": null }
     ]
   }
 }
@@ -118,15 +122,13 @@ Enroll in a course. Automatically creates lesson progress records for every acti
 
 **Errors:**
 - `400` — Already enrolled in this course
-- `400` — Minimum semester/year requirement not met
+- `400` — Minimum semester X required / Minimum year X required
 
 ---
 
-## 3. My Enrollments
+## 3. My Enrolled Courses
 
 ### GET `/intern/courses/my-enrollments`
-
-Get all courses the intern has enrolled in.
 
 **Query Params:**
 
@@ -145,8 +147,6 @@ Get all courses the intern has enrolled in.
     "items": [
       {
         "id": "enrollment_id",
-        "internId": "intern_id",
-        "courseId": "course_id",
         "status": "IN_PROGRESS",
         "progress": 62,
         "enrolledAt": "2026-07-10T00:00:00.000Z",
@@ -162,13 +162,8 @@ Get all courses the intern has enrolled in.
           "hasFinalTest": true,
           "totalLessons": 8,
           "lessons": [
-            {
-              "id": "lesson_id_1",
-              "title": "Introduction to Macronutrients",
-              "order": 1,
-              "durationMin": 15,
-              "isActive": true
-            }
+            { "id": "lesson_id_1", "title": "Introduction to Macronutrients", "order": 1, "durationMin": 15 },
+            { "id": "lesson_id_2", "title": "Understanding Micronutrients", "order": 2, "durationMin": 20 }
           ]
         },
         "lessonProgress": [
@@ -188,7 +183,7 @@ Get all courses the intern has enrolled in.
 
 ### GET `/intern/courses/:courseId/progress`
 
-Get full course content with the intern's lesson-by-lesson progress merged in.
+Full course content with lesson completion merged in. Use this for the course player screen.
 
 **Response:**
 ```json
@@ -211,8 +206,8 @@ Get full course content with the intern's lesson-by-lesson progress merged in.
         {
           "id": "lesson_id_1",
           "title": "Introduction to Macronutrients",
-          "content": "Full lesson text content here...",
-          "videoUrl": "https://youtube.com/...",
+          "content": "Full lesson text or HTML here...",
+          "videoUrl": "https://youtube.com/watch?v=example",
           "fileUrl": "/uploads/digital-products/files/lesson1.pdf",
           "order": 1,
           "durationMin": 15,
@@ -231,17 +226,18 @@ Get full course content with the intern's lesson-by-lesson progress merged in.
           "completedAt": null
         }
       ]
-    },
-    "lessonProgress": [...]
+    }
   }
 }
 ```
 
-**Key fields per lesson:**
-- `isCompleted` — already merged, use this directly to show tick/lock
-- `content` — text/HTML content of the lesson
-- `videoUrl` — optional video link
-- `fileUrl` — optional downloadable file
+**Key lesson fields:**
+- `isCompleted` — already merged, use directly for tick / lock UI
+- `content` — lesson text or HTML
+- `videoUrl` — optional embed link
+- `fileUrl` — optional downloadable PDF
+
+> Returns `400` if intern is not enrolled in this course.
 
 ---
 
@@ -249,9 +245,7 @@ Get full course content with the intern's lesson-by-lesson progress merged in.
 
 ### PATCH `/intern/courses/:courseId/lessons/:lessonId/complete`
 
-Mark a single lesson as done. Progress percentage auto-recalculates.
-
-**No request body needed.**
+No request body needed. Progress recalculates automatically.
 
 **Response:**
 ```json
@@ -267,10 +261,10 @@ Mark a single lesson as done. Progress percentage auto-recalculates.
 }
 ```
 
-**Status transitions:**
-- `ENROLLED` → `IN_PROGRESS` (first lesson completed)
-- `IN_PROGRESS` → `COMPLETED` (all lessons done + no final test)
-- `IN_PROGRESS` → stays `IN_PROGRESS` (all lessons done + has final test, until test submitted)
+**Progress → Status transitions:**
+- First lesson done → `ENROLLED` becomes `IN_PROGRESS`
+- All lessons done + no final test → `IN_PROGRESS` becomes `COMPLETED`
+- All lessons done + has final test → stays `IN_PROGRESS` until final test submitted
 
 ---
 
@@ -278,7 +272,7 @@ Mark a single lesson as done. Progress percentage auto-recalculates.
 
 ### PATCH `/intern/courses/:courseId/final-test`
 
-Submit pass/fail result for the course final test. Only available after progress reaches 100%.
+Must complete all lessons first. Only for courses where `hasFinalTest: true`.
 
 **Request Body:**
 ```json
@@ -304,7 +298,7 @@ Submit pass/fail result for the course final test. Only available after progress
 ```
 
 **Errors:**
-- `400` — `passed` field missing
+- `400` — `passed` field is required
 - `400` — This course has no final test
 - `400` — Complete all lessons before taking the final test
 
@@ -314,25 +308,22 @@ Submit pass/fail result for the course final test. Only available after progress
 
 | Status | Meaning | UI hint |
 |---|---|---|
-| `ENROLLED` | Enrolled, not started | Show "Start Course" |
-| `IN_PROGRESS` | At least one lesson done | Show progress bar |
-| `COMPLETED` | All done (and test passed if applicable) | Show certificate/badge |
+| `ENROLLED` | Enrolled, not started | Show "Start Course" button |
+| `IN_PROGRESS` | At least one lesson done | Show progress bar + "Continue" |
+| `COMPLETED` | All done (and test passed if applicable) | Show badge / certificate |
 | `FAILED` | Final test failed | Show "Retry Test" |
 
 ---
 
-## Error Responses
+## Error Format
 
 ```json
-{
-  "success": false,
-  "message": "Error description here"
-}
+{ "success": false, "message": "Error description" }
 ```
 
-| Status | Meaning |
+| Code | Meaning |
 |---|---|
-| `400` | Validation error / business rule violation |
-| `401` | Missing or invalid JWT token |
-| `403` | Access denied (not an intern) |
+| `400` | Validation / business rule |
+| `401` | Missing or invalid token |
+| `403` | Not an intern |
 | `404` | Course not found |
